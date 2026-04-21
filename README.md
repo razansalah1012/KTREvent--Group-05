@@ -1,1 +1,1 @@
-# KTR-Integrated-Event-Management-System---Group-05
+# KTR Event Management System -Group-05
