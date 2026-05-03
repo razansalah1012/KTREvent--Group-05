@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../services/auth_service.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -12,7 +12,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
+final AuthService _authService = AuthService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,15 +51,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
 
               const SizedBox(height: 20),
+@override
+void dispose() {
+  emailController.dispose();
+  passwordController.dispose();
+  super.dispose();
+}
 
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // call auth service here
-                    print("Valid form");
-                  }
-                },
-                child: const Text("Register"),
+
+            ElevatedButton(
+  onPressed: () async {
+    if (_formKey.currentState!.validate()) {
+
+      final user = await _authService.registerUser(
+        emailController.text,
+        passwordController.text,
+      );
+
+      if (user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration Successful")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration Failed")),
+        );
+      }
+    }
+  },
+  child: const Text("Register"),
               ),
             ],
           ),

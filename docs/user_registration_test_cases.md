@@ -1,31 +1,16 @@
 # User Registration Test Cases
 
----
+## Role Flow
+- Valid email + password → Success
+- Invalid email → Error shown
+- Empty form → Blocked
 
-## 1. Role Flow Testing
+## Error Cases
+- Email missing @ → Invalid email error
+- Password < 6 → Error message
+- Empty fields → Required validation
 
-| Test Case | Input | Expected Result |
-|----------|------|----------------|
-| Valid registration | email@test.com, 123456 | User registered successfully |
-| Empty fields | "", "" | Show validation error |
-| Valid format | test@gmail.com | Accept input |
-
----
-
-## 2. Error Testing
-
-| Test Case | Input | Expected Result |
-|----------|------|----------------|
-| Invalid email | test.com | Show "Enter valid email" |
-| Short password | 123 | Show password error |
-| Empty submit | nothing | Validation blocked |
-
----
-
-## 3. Edge Cases
-
-| Test Case | Input | Expected Result |
-|----------|------|----------------|
-| Long email | verylongemail@test.com | System handles safely |
-| Spaces only | "   " | Show validation error |
-| Special characters | @@@### | Handled safely |
+## Edge Cases
+- Very long email → handled
+- Spaces only → rejected
+- Special characters password → allowed if valid length

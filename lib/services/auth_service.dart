@@ -24,8 +24,8 @@ class AuthService {
 
       return user;
     } catch (e) {
-      print("Error: $e");
-      return null;
-    }
+  print("Registration Error: $e");
+  return null;
+}
   }
 }
