@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
+import 'firebase_options.dart';
+import 'core/theme/app_theme.dart';
+import 'modules/intro/screens/intro_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -20,15 +22,8 @@ class RazakEventApp extends StatelessWidget {
     return MaterialApp(
       title: 'RazakEvent',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('RazakEvent Firebase Connected'),
-        ),
-      ),
+      theme: AppTheme.darkTheme,
+      home: const IntroScreen(),
     );
   }
 }
