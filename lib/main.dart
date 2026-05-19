@@ -1,3 +1,4 @@
+import 'modules/proposal/proposal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -23,7 +24,7 @@ class RazakEventApp extends StatelessWidget {
       title: 'RazakEvent',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const IntroScreen(),
+      home: ProposalScreen(),
     );
   }
 }
