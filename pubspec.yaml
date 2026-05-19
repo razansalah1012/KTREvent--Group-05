@@ -35,9 +35,10 @@ dependencies:
   firebase_core: ^4.7.0
   firebase_auth: ^6.4.0
   cloud_firestore: ^6.3.0
-  firebase_storage: ^13.3.0
   firebase_messaging: ^16.2.0
   google_fonts: ^6.2.0    # add this line
+  file_picker: ^8.0.0+1
+  url_launcher: ^6.3.2
 
 flutter:
   uses-material-design: true

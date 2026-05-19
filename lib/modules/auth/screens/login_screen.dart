@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:razakevent/modules/admin/screens/admin_dashboard_screen.dart';
 
 // Bring in the register screen so we can navigate to it when the user
 // taps the “Register” link. This import uses a relative path because
@@ -13,7 +14,7 @@ import 'register_screen.dart';
 // their home page. Admin and club member dashboards are represented
 // by placeholders for now but can be swapped out when available.
 import '../../student/screens/student_dashboard_screen.dart';
-
+import '../../club_member/screens/club_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -123,9 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // when those dashboards are implemented.
       Widget dashboard;
       if (role == 'admin') {
-        dashboard = const Placeholder();
+        dashboard = const AdminDashboardScreen();
       } else if (role == 'club_member') {
-        dashboard = const Placeholder();
+        dashboard = const ClubDashboardScreen();
       } else {
         dashboard = const StudentDashboardScreen();
       }
