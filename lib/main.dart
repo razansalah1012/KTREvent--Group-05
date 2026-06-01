@@ -24,7 +24,7 @@ class RazakEventApp extends StatelessWidget {
       title: 'RazakEvent',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const IntroScreen(),
+      home:  ProposalScreen(),
     );
   }
 }
