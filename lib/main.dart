@@ -12,7 +12,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const RazakEventApp());
+  runApp(const RazakEventAp2p());
 }
 
 class RazakEventApp extends StatelessWidget {
