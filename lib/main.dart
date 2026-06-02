@@ -12,7 +12,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const RazakEventAp2p());
+  runApp(const RazakEventApp());
 }
 
 class RazakEventApp extends StatelessWidget {
@@ -24,7 +24,7 @@ class RazakEventApp extends StatelessWidget {
       title: 'RazakEvent',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home:  ProposalScreen(),
+      home:  IntroScreen(),
     );
   }
 }
