@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../auth/screens/login_screen.dart';
 import 'admin_proposal_screen.dart';
+import '../../events/screens/manage_events_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -54,9 +55,10 @@ class AdminDashboardScreen extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(
               'Welcome, College Admin',
               style: GoogleFonts.poppins(
@@ -88,6 +90,25 @@ class AdminDashboardScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const AdminProposalScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
+            _adminFeatureCard(
+              context: context,
+              title: 'College Events',
+              subtitle: 'View all active and upcoming college events (Read Only).',
+              icon: Icons.event_available_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ManageEventsScreen(
+                      showManagementButtons: false,
+                      isAdminView: true,
+                    ),
                   ),
                 );
               },
@@ -127,6 +148,7 @@ class AdminDashboardScreen extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

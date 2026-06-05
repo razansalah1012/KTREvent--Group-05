@@ -79,12 +79,12 @@ class EventTicketCard extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             description,
-                            style: GoogleFonts.quicksand(
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
                             ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
