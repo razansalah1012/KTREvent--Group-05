@@ -1,3 +1,5 @@
+import '../../equipment/screens/approve_equipment_screen.dart';
+import '../../equipment/screens/track_equipment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,25 +42,57 @@ class AdminDashboardScreen extends StatelessWidget {
         ],
       ),
       body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF110d27), Color(0xFF1e1533), Color(0xFF2a2147)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  width: double.infinity,
+  decoration: const BoxDecoration(
+    gradient: LinearGradient(
+      colors: [
+        Color(0xFF110d27),
+        Color(0xFF1e1533),
+        Color(0xFF2a2147)
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+  ),
+  child: Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+
+        ElevatedButton.icon(
+          icon: const Icon(Icons.check_circle),
+          label: const Text(
+            'Approve Equipment Requests',
           ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ApproveEquipmentScreen(),
+              ),
+            );
+          },
         ),
-        child: Center(
-          child: Text(
-            'Admin Dashboard',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
+
+        const SizedBox(height: 30),
+
+        ElevatedButton.icon(
+          icon: const Icon(Icons.inventory),
+          label: const Text(
+            'Track Equipment Usage',
           ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const TrackEquipmentScreen(),
+              ),
+            );
+          },
         ),
-      ),
-    );
-  }
-}
+      ],
+    ),
+  ),
+),
