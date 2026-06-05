@@ -1,3 +1,4 @@
+import 'package:razakevent/modules/equipment/screens/request_equipment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,10 +34,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   void initState() {
     super.initState();
     _pages = const [
-      ExploreEventsScreen(),
-      BookedEventsScreen(),
-      StudentProfileScreen(),
-    ];
+  ExploreEventsScreen(),
+  RequestEquipmentScreen(),
+  BookedEventsScreen(),
+  StudentProfileScreen(),
+];
   }
 
   /// Performs a check against Firestore to confirm the current
@@ -141,22 +143,31 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             unselectedItemColor: Colors.white70,
             showUnselectedLabels: true,
             items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.explore_outlined),
-                activeIcon: Icon(Icons.explore),
-                label: 'Explore',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.confirmation_num_outlined),
-                activeIcon: Icon(Icons.confirmation_num),
-                label: 'Booked',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profile',
-              ),
-            ],
+
+  BottomNavigationBarItem(
+    icon: Icon(Icons.explore_outlined),
+    activeIcon: Icon(Icons.explore),
+    label: 'Explore',
+  ),
+
+  BottomNavigationBarItem(
+    icon: Icon(Icons.inventory_2_outlined),
+    activeIcon: Icon(Icons.inventory_2),
+    label: 'Equipment',
+  ),
+
+  BottomNavigationBarItem(
+    icon: Icon(Icons.confirmation_num_outlined),
+    activeIcon: Icon(Icons.confirmation_num),
+    label: 'Booked',
+  ),
+
+  BottomNavigationBarItem(
+    icon: Icon(Icons.person_outline),
+    activeIcon: Icon(Icons.person),
+    label: 'Profile',
+  ),
+],
           ),
           backgroundColor: const Color(0xFF110d27),
         );
