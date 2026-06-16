@@ -70,9 +70,9 @@ class _EditClubProfileScreenState extends State<EditClubProfileScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No logged in user found')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No logged in user found')));
       return;
     }
 
@@ -85,12 +85,12 @@ class _EditClubProfileScreenState extends State<EditClubProfileScreen> {
           .collection('users')
           .doc(currentUser.uid)
           .update({
-        'name': nameController.text.trim(),
-        'clubName': clubNameController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'position': positionController.text.trim(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'name': nameController.text.trim(),
+            'clubName': clubNameController.text.trim(),
+            'phone': phoneController.text.trim(),
+            'position': positionController.text.trim(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (!mounted) return;
 
@@ -100,9 +100,9 @@ class _EditClubProfileScreenState extends State<EditClubProfileScreen> {
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating profile: $e')));
     }
 
     if (mounted) {
@@ -127,100 +127,100 @@ class _EditClubProfileScreenState extends State<EditClubProfileScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(22),
-        child: Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2B1D44),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFB99CFF), width: 2),
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.manage_accounts_outlined,
-                  color: Color(0xFFB99CFF),
-                  size: 60,
+              padding: const EdgeInsets.all(22),
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2B1D44),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: const Color(0xFFB99CFF), width: 2),
                 ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.manage_accounts_outlined,
+                        color: Color(0xFFB99CFF),
+                        size: 60,
+                      ),
 
-                const SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
-                const Text(
-                  'Club Member Profile',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                      const Text(
+                        'Club Member Profile',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      _buildTextField(
+                        controller: nameController,
+                        label: 'Full Name',
+                        icon: Icons.person_outline,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: clubNameController,
+                        label: 'Club / Organization Name',
+                        icon: Icons.apartment_outlined,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: phoneController,
+                        label: 'Contact Number',
+                        icon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: positionController,
+                        label: 'Position',
+                        icon: Icons.badge_outlined,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isSaving ? null : saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9B6DFF),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          child: isSaving
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  'Save Profile',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-                const SizedBox(height: 25),
-
-                _buildTextField(
-                  controller: nameController,
-                  label: 'Full Name',
-                  icon: Icons.person_outline,
-                ),
-
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: clubNameController,
-                  label: 'Club / Organization Name',
-                  icon: Icons.apartment_outlined,
-                ),
-
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: phoneController,
-                  label: 'Contact Number',
-                  icon: Icons.phone_outlined,
-                  keyboardType: TextInputType.phone,
-                ),
-
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: positionController,
-                  label: 'Position',
-                  icon: Icons.badge_outlined,
-                ),
-
-                const SizedBox(height: 28),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isSaving ? null : saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9B6DFF),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: isSaving
-                        ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
-                        : const Text(
-                      'Save Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -250,10 +250,7 @@ class _EditClubProfileScreenState extends State<EditClubProfileScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(
-            color: Color(0xFFB99CFF),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFB99CFF), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),

@@ -57,9 +57,11 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
   }
 
   void _checkConstraints(EventModel event) {
-    if (event.crewDeadline != null && DateTime.now().isAfter(event.crewDeadline!)) {
+    if (event.crewDeadline != null &&
+        DateTime.now().isAfter(event.crewDeadline!)) {
       setState(() => _errorMsg = 'Application deadline has passed.');
-    } else if (event.crewSlots > 0 && event.acceptedCrewCount >= event.crewSlots) {
+    } else if (event.crewSlots > 0 &&
+        event.acceptedCrewCount >= event.crewSlots) {
       setState(() => _errorMsg = 'No crew slots available.');
     }
   }
@@ -75,7 +77,9 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
     if (_errorMsg.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_errorMsg)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_errorMsg)));
       return;
     }
 
@@ -85,7 +89,6 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Check for duplicate application
       final existing = await FirebaseFirestore.instance
           .collection('crewApplications')
           .where('eventId', isEqualTo: widget.eventId)
@@ -95,23 +98,29 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
       if (existing.docs.isNotEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You have already applied for this event.')),
+          const SnackBar(
+            content: Text('You have already applied for this event.'),
+          ),
         );
         setState(() => _isLoading = false);
         return;
       }
 
-      // Fetch user name robustly
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
-      
-      final Map<String, dynamic> userData = (userDoc.data() as Map<String, dynamic>?) ?? {};
-      final userName = userData['fullname'] ?? userData['fullName'] ?? userData['name'] ?? user.email ?? 'Student';
 
-      // Ensure we use the most accurate organizer ID
-      final String targetOrganizerId = _event?.organizerId ?? widget.eventOrganizerId;
+      final Map<String, dynamic> userData = userDoc.data() ?? {};
+      final userName =
+          userData['fullname'] ??
+          userData['fullName'] ??
+          userData['name'] ??
+          user.email ??
+          'Student';
+
+      final String targetOrganizerId =
+          _event?.organizerId ?? widget.eventOrganizerId;
 
       if (targetOrganizerId.isEmpty) {
         throw Exception('Could not identify event organizer.');
@@ -119,8 +128,9 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
 
       final batch = FirebaseFirestore.instance.batch();
 
-      // 1. Create Crew Application Record
-      final appRef = FirebaseFirestore.instance.collection('crewApplications').doc();
+      final appRef = FirebaseFirestore.instance
+          .collection('crewApplications')
+          .doc();
       batch.set(appRef, {
         'eventId': widget.eventId,
         'eventTitle': widget.eventTitle,
@@ -135,8 +145,9 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // 2. Notify Organizer
-      final notifRef = FirebaseFirestore.instance.collection('notifications').doc();
+      final notifRef = FirebaseFirestore.instance
+          .collection('notifications')
+          .doc();
       batch.set(notifRef, {
         'userId': targetOrganizerId,
         'title': 'New Crew Application',
@@ -147,12 +158,14 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
         'isRead': false,
       });
 
-      // 3. Notify Student (Confirmation)
-      final studentNotifRef = FirebaseFirestore.instance.collection('notifications').doc();
+      final studentNotifRef = FirebaseFirestore.instance
+          .collection('notifications')
+          .doc();
       batch.set(studentNotifRef, {
         'userId': user.uid,
         'title': 'Application Submitted',
-        'message': 'Your crew application for "${widget.eventTitle}" has been received.',
+        'message':
+            'Your crew application for "${widget.eventTitle}" has been received.',
         'type': 'crew_application_submitted',
         'eventId': widget.eventId,
         'createdAt': FieldValue.serverTimestamp(),
@@ -168,9 +181,9 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -267,7 +280,9 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isLoading || _errorMsg.isNotEmpty ? null : _submitApplication,
+                          onPressed: _isLoading || _errorMsg.isNotEmpty
+                              ? null
+                              : _submitApplication,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF9B6DFF),
                             foregroundColor: Colors.white,
@@ -280,7 +295,10 @@ class _ApplyAsCrewScreenState extends State<ApplyAsCrewScreen> {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text('Submit Application'),
                         ),

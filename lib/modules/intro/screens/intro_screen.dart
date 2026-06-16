@@ -33,9 +33,7 @@ class _IntroScreenState extends State<IntroScreen>
     _slide = Tween<Offset>(
       begin: const Offset(0, 0.18),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -44,8 +42,8 @@ class _IntroScreenState extends State<IntroScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 850),
-        pageBuilder: (_, animation, __) => const LoginScreen(),
-        transitionsBuilder: (_, animation, __, child) {
+        pageBuilder: (_, animation, _) => const LoginScreen(),
+        transitionsBuilder: (_, animation, _, child) {
           final curved = CurvedAnimation(
             parent: animation,
             curve: Curves.easeInOutCubic,
@@ -94,11 +92,7 @@ class _IntroScreenState extends State<IntroScreen>
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF0D0820),
-              Color(0xFF17102E),
-              Color(0xFF281A46),
-            ],
+            colors: [Color(0xFF0D0820), Color(0xFF17102E), Color(0xFF281A46)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -123,38 +117,74 @@ class _IntroScreenState extends State<IntroScreen>
                         ),
                         child: Column(
                           children: [
-                            SizedBox(height: isVerySmall ? 28 : isSmall ? 42 : 70),
+                            SizedBox(
+                              height: isVerySmall
+                                  ? 28
+                                  : isSmall
+                                  ? 42
+                                  : 70,
+                            ),
 
                             SizedBox(
-                              width: isVerySmall ? 95 : isSmall ? 110 : 130,
-                              height: isVerySmall ? 95 : isSmall ? 110 : 130,
+                              width: isVerySmall
+                                  ? 95
+                                  : isSmall
+                                  ? 110
+                                  : 130,
+                              height: isVerySmall
+                                  ? 95
+                                  : isSmall
+                                  ? 110
+                                  : 130,
                               child: Image.asset(
                                 'assets/images/app_icon.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
 
-                            SizedBox(height: isVerySmall ? 18 : isSmall ? 22 : 30),
+                            SizedBox(
+                              height: isVerySmall
+                                  ? 18
+                                  : isSmall
+                                  ? 22
+                                  : 30,
+                            ),
 
                             Text(
                               'KTR Event',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.goldman(
-                                fontSize: isVerySmall ? 29 : isSmall ? 32 : 38,
+                                fontSize: isVerySmall
+                                    ? 29
+                                    : isSmall
+                                    ? 32
+                                    : 38,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.white,
                                 letterSpacing: 0.7,
                               ),
                             ),
 
-                            SizedBox(height: isVerySmall ? 24 : isSmall ? 28 : 38),
+                            SizedBox(
+                              height: isVerySmall
+                                  ? 24
+                                  : isSmall
+                                  ? 28
+                                  : 38,
+                            ),
 
                             _PurpleTicketParagraph(
                               isSmall: isSmall,
                               isVerySmall: isVerySmall,
                             ),
 
-                            SizedBox(height: isVerySmall ? 24 : isSmall ? 28 : 38),
+                            SizedBox(
+                              height: isVerySmall
+                                  ? 24
+                                  : isSmall
+                                  ? 28
+                                  : 38,
+                            ),
 
                             Text(
                               'Swipe to Start',
@@ -272,22 +302,32 @@ class _PurpleTicketParagraph extends StatelessWidget {
       clipper: _TicketClipper(),
       child: Container(
         width: double.infinity,
-        height: isVerySmall ? 128 : isSmall ? 138 : 155,
+        height: isVerySmall
+            ? 128
+            : isSmall
+            ? 138
+            : 155,
         decoration: BoxDecoration(
           color: const Color(0xFF6F45C9).withOpacity(0.94),
         ),
         child: Stack(
           children: [
             Positioned.fill(
-              child: CustomPaint(
-                painter: _TicketDetailsPainter(),
-              ),
+              child: CustomPaint(painter: _TicketDetailsPainter()),
             ),
             Positioned(
               left: isSmall ? 26 : 30,
               right: isSmall ? 82 : 96,
-              top: isVerySmall ? 18 : isSmall ? 23 : 31,
-              bottom: isVerySmall ? 18 : isSmall ? 23 : 30,
+              top: isVerySmall
+                  ? 18
+                  : isSmall
+                  ? 23
+                  : 31,
+              bottom: isVerySmall
+                  ? 18
+                  : isSmall
+                  ? 23
+                  : 30,
               child: Center(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -295,11 +335,15 @@ class _PurpleTicketParagraph extends StatelessWidget {
                     width: isSmall ? 220 : 255,
                     child: Text(
                       'Manage student events, club activities, registrations, equipment, '
-                          'and approvals in one secure mobile platform built for KTR community users.',
+                      'and approvals in one secure mobile platform built for KTR community users.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.bodoniModa(
                         color: Colors.white,
-                        fontSize: isVerySmall ? 12.2 : isSmall ? 13 : 14.3,
+                        fontSize: isVerySmall
+                            ? 12.2
+                            : isSmall
+                            ? 13
+                            : 14.3,
                         height: 1.42,
                         fontWeight: FontWeight.w500,
                       ),
@@ -465,17 +509,18 @@ class _SpacePainter extends CustomPainter {
     }
 
     final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF8C5CFF).withOpacity(0.26),
-          Colors.transparent,
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.5, size.height * 0.85),
-          radius: 260,
-        ),
-      );
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFF8C5CFF).withOpacity(0.26),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.5, size.height * 0.85),
+              radius: 260,
+            ),
+          );
 
     canvas.drawCircle(
       Offset(size.width * 0.5, size.height * 0.85),

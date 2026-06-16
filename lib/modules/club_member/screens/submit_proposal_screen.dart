@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import '../../../core/localization/app_translations.dart';
 
 class SubmitProposalScreen extends StatefulWidget {
   const SubmitProposalScreen({super.key});
@@ -13,7 +16,8 @@ class SubmitProposalScreen extends StatefulWidget {
 class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  String? selectedPdfName;
+  PlatformFile? selectedPdfFile;
+  bool isSubmitting = false;
 
   final programNameController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -23,6 +27,29 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
 
   String organizerType = 'Club';
   DateTime? selectedDate;
+  String _lang = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (doc.exists && mounted) {
+        setState(() {
+          _lang = doc.data()?['language'] ?? 'en';
+          organizerType = AppTranslations.get(_lang, 'club');
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -55,7 +82,7 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
 
     if (result != null) {
       setState(() {
-        selectedPdfName = result.files.single.name;
+        selectedPdfFile = result.files.single;
       });
     }
   }
@@ -65,26 +92,46 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
 
     if (selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select program date')),
+        SnackBar(
+          content: Text(AppTranslations.get(_lang, 'select_program_date')),
+        ),
       );
       return;
     }
 
-    if (selectedPdfName == null) {
+    if (selectedPdfFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload proposal PDF')),
+        SnackBar(
+          content: Text(AppTranslations.get(_lang, 'upload_proposal_pdf_err')),
+        ),
       );
       return;
     }
+
+    setState(() {
+      isSubmitting = true;
+    });
 
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No logged in user found')),
+        throw Exception(AppTranslations.get(_lang, 'not_logged_in'));
+      }
+
+      String pdfUrl = '';
+
+      if (selectedPdfFile!.path != null) {
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${selectedPdfFile!.name}';
+        final storageRef = FirebaseStorage.instance.ref().child(
+          'proposals/$fileName',
         );
-        return;
+
+        final uploadTask = await storageRef.putFile(
+          File(selectedPdfFile!.path!),
+        );
+        pdfUrl = await uploadTask.ref.getDownloadURL();
       }
 
       await FirebaseFirestore.instance.collection('proposals').add({
@@ -96,8 +143,8 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
         'organizerType': organizerType,
         'programDate': Timestamp.fromDate(selectedDate!),
         'status': 'pending',
-        'pdfName': selectedPdfName,
-        'pdfUrl': '',
+        'pdfName': selectedPdfFile!.name,
+        'pdfUrl': pdfUrl,
         'submittedBy': currentUser.uid,
         'submittedByEmail': currentUser.email,
         'submittedAt': FieldValue.serverTimestamp(),
@@ -114,14 +161,25 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Proposal submitted successfully')),
+        SnackBar(
+          content: Text(
+            AppTranslations.get(_lang, 'proposal_submitted_success'),
+          ),
+        ),
       );
 
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting proposal: $e')),
+        SnackBar(content: Text('${AppTranslations.get(_lang, 'error')}$e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
     }
   }
 
@@ -132,9 +190,12 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D0820),
         elevation: 0,
-        title: const Text(
-          'Submit Proposal',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppTranslations.get(_lang, 'submit_proposal'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -157,9 +218,9 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                   size: 60,
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  'Event Proposal Form',
-                  style: TextStyle(
+                Text(
+                  AppTranslations.get(_lang, 'event_proposal_form'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -168,50 +229,53 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                 const SizedBox(height: 25),
                 _buildTextField(
                   controller: programNameController,
-                  label: 'Program Name',
+                  label: AppTranslations.get(_lang, 'program_name'),
                   icon: Icons.event,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: descriptionController,
-                  label: 'Program Description',
+                  label: AppTranslations.get(_lang, 'program_description'),
                   icon: Icons.notes,
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: objectivesController,
-                  label: 'Objectives',
+                  label: AppTranslations.get(_lang, 'objectives'),
                   icon: Icons.flag_outlined,
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: venueController,
-                  label: 'Venue',
+                  label: AppTranslations.get(_lang, 'venue'),
                   icon: Icons.location_on_outlined,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: budgetController,
-                  label: 'Estimated Budget (RM)',
+                  label: AppTranslations.get(_lang, 'estimated_budget'),
                   icon: Icons.attach_money,
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: organizerType,
+                  initialValue: organizerType,
                   dropdownColor: const Color(0xFF2B1D44),
                   decoration: _inputDecoration(
-                    label: 'Organizer Type',
+                    label: AppTranslations.get(_lang, 'organizer_type'),
                     icon: Icons.groups_outlined,
                   ),
                   style: const TextStyle(color: Colors.white),
-                  items: const [
-                    DropdownMenuItem(value: 'Club', child: Text('Club')),
+                  items: [
                     DropdownMenuItem(
-                      value: 'Community',
-                      child: Text('Community'),
+                      value: AppTranslations.get(_lang, 'club'),
+                      child: Text(AppTranslations.get(_lang, 'club')),
+                    ),
+                    DropdownMenuItem(
+                      value: AppTranslations.get(_lang, 'community'),
+                      child: Text(AppTranslations.get(_lang, 'community')),
                     ),
                   ],
                   onChanged: (value) {
@@ -239,7 +303,10 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                         const SizedBox(width: 12),
                         Text(
                           selectedDate == null
-                              ? 'Select Program Date'
+                              ? AppTranslations.get(
+                                  _lang,
+                                  'select_program_date_label',
+                                )
                               : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                           style: const TextStyle(
                             color: Colors.white70,
@@ -256,7 +323,9 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                     OutlinedButton.icon(
                       onPressed: pickPdf,
                       icon: const Icon(Icons.upload_file),
-                      label: const Text('Upload Proposal PDF'),
+                      label: Text(
+                        AppTranslations.get(_lang, 'upload_proposal_pdf'),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFB99CFF),
                         side: const BorderSide(color: Color(0xFFB99CFF)),
@@ -267,9 +336,9 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (selectedPdfName != null)
+                    if (selectedPdfFile != null)
                       Text(
-                        selectedPdfName!,
+                        selectedPdfFile!.name,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white70,
@@ -282,22 +351,34 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: submitProposal,
+                    onPressed: isSubmitting ? null : submitProposal,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9B6DFF),
+                      disabledBackgroundColor: const Color(
+                        0xFF9B6DFF,
+                      ).withOpacity(0.5),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
                     ),
-                    child: const Text(
-                      'Submit Proposal',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            AppTranslations.get(_lang, 'submit_proposal'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -322,7 +403,7 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
       style: const TextStyle(color: Colors.white),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return '$label is required';
+          return '$label ${AppTranslations.get(_lang, 'is_required')}';
         }
         return null;
       },
@@ -344,10 +425,7 @@ class _SubmitProposalScreenState extends State<SubmitProposalScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(
-          color: Color(0xFFB99CFF),
-          width: 2,
-        ),
+        borderSide: const BorderSide(color: Color(0xFFB99CFF), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),

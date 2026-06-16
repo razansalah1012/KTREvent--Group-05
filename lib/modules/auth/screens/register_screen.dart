@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/localization/app_translations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,10 +18,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
   String _selectedRole = 'student';
   bool _isLoading = false;
   String? _errorMessage;
+  String _lang = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _lang = prefs.getString('language') ?? 'en';
+    });
+  }
+
+  Future<void> _setLanguage(String langCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', langCode);
+    setState(() {
+      _lang = langCode;
+    });
+  }
 
   @override
   void dispose() {
@@ -37,14 +61,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMessage = null;
     });
     try {
-      final UserCredential credential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final UserCredential credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
       final User user = credential.user!;
-      final String status =
-      _selectedRole == 'club_member' ? 'pending' : 'approved';
+      final String status = _selectedRole == 'club_member'
+          ? 'pending'
+          : 'approved';
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'fullName': _nameController.text.trim(),
         'email': _emailController.text.trim(),
@@ -57,9 +82,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final String message = status == 'pending'
           ? 'Registration submitted! Verify your email and wait for admin approval.'
           : 'Registration successful! Verify your email before logging in.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       Navigator.of(context).pop();
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -79,15 +104,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final double height = MediaQuery.of(context).size.height;
     final bool isSmall = height < 760;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF110d27),
+        elevation: 0,
+        actions: [
+          DropdownButton<String>(
+            value: _lang,
+            dropdownColor: const Color(0xFF241B3A),
+            icon: const Icon(Icons.language, color: Colors.white),
+            underline: const SizedBox(),
+            items: const [
+              DropdownMenuItem(
+                value: 'en',
+                child: Text('EN', style: TextStyle(color: Colors.white)),
+              ),
+              DropdownMenuItem(
+                value: 'ms',
+                child: Text('MS', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) _setLanguage(val);
+            },
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF110d27),
-              Color(0xFF1e1533),
-              Color(0xFF2a2147),
-            ],
+            colors: [Color(0xFF110d27), Color(0xFF1e1533), Color(0xFF2a2147)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -115,7 +162,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
                   Text(
                     'KTR Event',
                     style: GoogleFonts.goldman(
@@ -126,9 +172,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Title and subtitle
                   Text(
-                    'Create Account',
+                    AppTranslations.get(_lang, 'create_account'),
                     style: GoogleFonts.poppins(
                       fontSize: isSmall ? 25 : 30,
                       color: Colors.white,
@@ -137,7 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Sign up to get started',
+                    AppTranslations.get(_lang, 'sign_up_to_get_started'),
                     style: GoogleFonts.quicksand(
                       fontSize: 16,
                       color: Colors.white70,
@@ -148,26 +193,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Full name field
                         TextFormField(
                           controller: _nameController,
                           style: GoogleFonts.quicksand(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Full Name',
+                            labelText: AppTranslations.get(_lang, 'full_name'),
                             prefixIcon: const Icon(Icons.person_outline),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white70),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -178,27 +229,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        // Email field
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           style: GoogleFonts.quicksand(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Email',
+                            labelText: AppTranslations.get(_lang, 'email'),
                             prefixIcon: const Icon(Icons.email_outlined),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white70),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -209,27 +266,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        // Password field
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
                           style: GoogleFonts.quicksand(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: AppTranslations.get(_lang, 'password'),
                             prefixIcon: const Icon(Icons.lock_outline),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white70),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -243,27 +306,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        // Confirm password field
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: true,
                           style: GoogleFonts.quicksand(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Confirm Password',
+                            labelText: AppTranslations.get(
+                              _lang,
+                              'confirm_password',
+                            ),
                             prefixIcon: const Icon(Icons.lock_outline),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white70),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -277,11 +349,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 22),
-                        // Role selection header
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Role',
+                            AppTranslations.get(_lang, 'role'),
                             style: GoogleFonts.poppins(
                               color: Colors.white70,
                               fontSize: 15,
@@ -290,13 +361,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Role selection buttons
                         Wrap(
                           spacing: 12,
                           runSpacing: 8,
                           children: [
                             _RoleOption(
-                              title: 'Student',
+                              title: AppTranslations.get(_lang, 'student'),
                               value: 'student',
                               selectedValue: _selectedRole,
                               onChanged: (String v) {
@@ -304,7 +374,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               },
                             ),
                             _RoleOption(
-                              title: 'Club Member',
+                              title: AppTranslations.get(_lang, 'club_member'),
                               value: 'club_member',
                               selectedValue: _selectedRole,
                               onChanged: (String v) {
@@ -325,7 +395,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
                         const SizedBox(height: 22),
-                        // Register button
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -335,34 +404,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               backgroundColor: const Color(0xFF8257E5),
                               foregroundColor: Colors.white,
                               disabledForegroundColor: Colors.white70,
-                              disabledBackgroundColor:
-                              const Color(0xFF8257E5).withOpacity(0.55),
+                              disabledBackgroundColor: const Color(
+                                0xFF8257E5,
+                              ).withOpacity(0.55),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: _isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
                                 : Text(
-                              'Register',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
+                                    AppTranslations.get(_lang, 'register'),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 22),
-                  // Login link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account?',
+                        AppTranslations.get(_lang, 'already_have_account'),
                         style: GoogleFonts.quicksand(
                           color: Colors.white70,
                           fontSize: 14,
@@ -373,7 +444,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.of(context).pop();
                         },
                         child: Text(
-                          'Login',
+                          AppTranslations.get(_lang, 'login'),
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -441,8 +512,7 @@ class _RoleOption extends StatelessWidget {
                 style: GoogleFonts.quicksand(
                   color: Colors.white,
                   fontSize: 14,
-                  fontWeight:
-                  selected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ),

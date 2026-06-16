@@ -21,9 +21,7 @@ class ViewCrewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Crew Applications"),
-      ),
+      appBar: AppBar(title: const Text("Crew Applications")),
 
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -31,24 +29,16 @@ class ViewCrewScreen extends StatelessWidget {
             .snapshots(),
 
         builder: (context, snapshot) {
-
-          // ✅ HANDLE ERROR (IMPORTANT FIX)
           if (snapshot.hasError) {
-            return Center(
-              child: Text("Something went wrong ❌"),
-            );
+            return Center(child: Text("Something went wrong ❌"));
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("No Applications Found"),
-            );
+            return const Center(child: Text("No Applications Found"));
           }
 
           var applications = snapshot.data!.docs;
@@ -56,7 +46,6 @@ class ViewCrewScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: applications.length,
             itemBuilder: (context, index) {
-
               try {
                 var data = applications[index];
                 String id = data.id;
@@ -76,7 +65,6 @@ class ViewCrewScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
                         Text("Name: $name"),
                         Text("Email: $email"),
                         Text("Contact: $contact"),
@@ -88,7 +76,6 @@ class ViewCrewScreen extends StatelessWidget {
                         if (status == "pending")
                           Row(
                             children: [
-
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
@@ -112,11 +99,8 @@ class ViewCrewScreen extends StatelessWidget {
                     ),
                   ),
                 );
-
               } catch (e) {
-                return const ListTile(
-                  title: Text("Error loading item"),
-                );
+                return const ListTile(title: Text("Error loading item"));
               }
             },
           );

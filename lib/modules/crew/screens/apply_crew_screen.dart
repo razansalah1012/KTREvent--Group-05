@@ -24,7 +24,6 @@ class _ApplyCrewScreenState extends State<ApplyCrewScreen> {
         nationalityController.text.isEmpty ||
         contactController.text.isEmpty ||
         emailController.text.isEmpty) {
-
       setState(() {
         message = "Please fill all fields ❌";
       });
@@ -39,9 +38,7 @@ class _ApplyCrewScreenState extends State<ApplyCrewScreen> {
     int age = int.tryParse(ageController.text.trim()) ?? 0;
 
     try {
-      await FirebaseFirestore.instance
-          .collection('crew_applications')
-          .add({
+      await FirebaseFirestore.instance.collection('crew_applications').add({
         'name': nameController.text.trim(),
         'age': age,
         'nationality': nationalityController.text.trim(),
@@ -54,7 +51,6 @@ class _ApplyCrewScreenState extends State<ApplyCrewScreen> {
       setState(() {
         message = "Application submitted ✅";
       });
-
     } catch (e) {
       setState(() {
         message = "Error ❌";
@@ -69,42 +65,50 @@ class _ApplyCrewScreenState extends State<ApplyCrewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Apply as Crew"),
-      ),
+      appBar: AppBar(title: const Text("Apply as Crew")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Name")),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Name"),
+            ),
             const SizedBox(height: 10),
 
-            TextField(controller: ageController, decoration: const InputDecoration(labelText: "Age")),
+            TextField(
+              controller: ageController,
+              decoration: const InputDecoration(labelText: "Age"),
+            ),
             const SizedBox(height: 10),
 
-            TextField(controller: nationalityController, decoration: const InputDecoration(labelText: "Nationality")),
+            TextField(
+              controller: nationalityController,
+              decoration: const InputDecoration(labelText: "Nationality"),
+            ),
             const SizedBox(height: 10),
 
-            TextField(controller: contactController, decoration: const InputDecoration(labelText: "Contact")),
+            TextField(
+              controller: contactController,
+              decoration: const InputDecoration(labelText: "Contact"),
+            ),
             const SizedBox(height: 10),
 
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
 
             const SizedBox(height: 20),
 
-            
-ElevatedButton(
-  onPressed: isLoading ? null : applyAsCrew,
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.deepPurple, // ✅ dark purple
-    minimumSize: const Size(double.infinity, 50),
-  ),
-  child: const Text(
-    "Apply",
-    style: TextStyle(color: Colors.white), // ✅ white text
-  ),
-),
+            ElevatedButton(
+              onPressed: isLoading ? null : applyAsCrew,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: const Text("Apply", style: TextStyle(color: Colors.white)),
+            ),
 
             const SizedBox(height: 10),
 

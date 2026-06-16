@@ -20,10 +20,7 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Proposal Approval',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -33,19 +30,14 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text(
                 'No proposals submitted yet.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 17,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 17),
               ),
             );
           }
@@ -59,11 +51,9 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
               final proposal = proposals[index];
               final data = proposal.data() as Map<String, dynamic>;
 
-              final programName =
-                  data['programName'] ?? 'Untitled Proposal';
+              final programName = data['programName'] ?? 'Untitled Proposal';
 
-              final organizerType =
-                  data['organizerType'] ?? '-';
+              final organizerType = data['organizerType'] ?? '-';
 
               final venue = data['venue'] ?? '-';
 
@@ -88,13 +78,11 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
                     color: const Color(0xFF2B1D44),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: const Color(0xFFB99CFF)
-                          .withOpacity(0.5),
+                      color: const Color(0xFFB99CFF).withOpacity(0.5),
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         programName,
@@ -109,18 +97,14 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
 
                       Text(
                         'Organizer Type: $organizerType',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                        ),
+                        style: const TextStyle(color: Colors.white70),
                       ),
 
                       const SizedBox(height: 5),
 
                       Text(
                         'Venue: $venue',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                        ),
+                        style: const TextStyle(color: Colors.white70),
                       ),
 
                       const SizedBox(height: 12),
@@ -154,10 +138,7 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
@@ -165,10 +146,7 @@ class _AdminProposalScreenState extends State<AdminProposalScreen> {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -191,9 +169,7 @@ class AdminProposalDetailsScreen extends StatefulWidget {
 
 class _AdminProposalDetailsScreenState
     extends State<AdminProposalDetailsScreen> {
-
-  final TextEditingController commentController =
-  TextEditingController();
+  final TextEditingController commentController = TextEditingController();
 
   bool isUpdating = false;
 
@@ -201,10 +177,7 @@ class _AdminProposalDetailsScreenState
     final Uri uri = Uri.parse(url);
 
     if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -212,8 +185,7 @@ class _AdminProposalDetailsScreenState
   void initState() {
     super.initState();
 
-    commentController.text =
-        widget.proposalData['adminComment'] ?? '';
+    commentController.text = widget.proposalData['adminComment'] ?? '';
   }
 
   @override
@@ -222,51 +194,36 @@ class _AdminProposalDetailsScreenState
     super.dispose();
   }
 
-  Future<void> updateProposalStatus(
-      String newStatus) async {
-
+  Future<void> updateProposalStatus(String newStatus) async {
     setState(() {
       isUpdating = true;
     });
 
     try {
-      final currentUser =
-          FirebaseAuth.instance.currentUser;
+      final currentUser = FirebaseAuth.instance.currentUser;
 
       await FirebaseFirestore.instance
           .collection('proposals')
           .doc(widget.proposalId)
           .update({
-        'status': newStatus,
-        'adminComment':
-        commentController.text.trim(),
-        'reviewedBy':
-        currentUser?.uid ?? '',
-        'reviewedByEmail':
-        currentUser?.email ?? '',
-        'reviewedAt':
-        FieldValue.serverTimestamp(),
-      });
+            'status': newStatus,
+            'adminComment': commentController.text.trim(),
+            'reviewedBy': currentUser?.uid ?? '',
+            'reviewedByEmail': currentUser?.email ?? '',
+            'reviewedAt': FieldValue.serverTimestamp(),
+          });
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-          Text('Proposal $newStatus successfully'),
-        ),
+        SnackBar(content: Text('Proposal $newStatus successfully')),
       );
 
       Navigator.pop(context);
-
     } catch (e) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-          Text('Error updating proposal: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating proposal: $e')));
     }
 
     if (mounted) {
@@ -278,7 +235,6 @@ class _AdminProposalDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-
     final data = widget.proposalData;
     final status = data['status'] ?? 'pending';
 
@@ -287,15 +243,11 @@ class _AdminProposalDetailsScreenState
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D0820),
-        iconTheme:
-        const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
 
         title: const Text(
           'Review Proposal',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
 
@@ -308,21 +260,15 @@ class _AdminProposalDetailsScreenState
           decoration: BoxDecoration(
             color: const Color(0xFF2B1D44),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: const Color(0xFFB99CFF),
-              width: 2,
-            ),
+            border: Border.all(color: const Color(0xFFB99CFF), width: 2),
           ),
 
           child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
 
             children: [
-
               Text(
-                data['programName'] ??
-                    'Untitled Proposal',
+                data['programName'] ?? 'Untitled Proposal',
 
                 style: const TextStyle(
                   color: Colors.white,
@@ -337,43 +283,24 @@ class _AdminProposalDetailsScreenState
 
               const SizedBox(height: 24),
 
-              _detailItem(
-                  'Description',
-                  data['description']),
+              _detailItem('Description', data['description']),
 
-              _detailItem(
-                  'Objectives',
-                  data['objectives']),
+              _detailItem('Objectives', data['objectives']),
 
-              _detailItem(
-                  'Venue',
-                  data['venue']),
+              _detailItem('Venue', data['venue']),
 
-              _detailItem(
-                'Budget',
-                'RM ${data['budget'] ?? '-'}',
-              ),
+              _detailItem('Budget', 'RM ${data['budget'] ?? '-'}'),
 
-              _detailItem(
-                  'Organizer Type',
-                  data['organizerType']),
+              _detailItem('Organizer Type', data['organizerType']),
 
-              _detailItem(
-                  'Submitted By',
-                  data['submittedByEmail']),
+              _detailItem('Submitted By', data['submittedByEmail']),
 
-              _detailItem(
-                  'PDF File',
-                  data['pdfName']),
+              _detailItem('PDF File', data['pdfName']),
 
               if (data['pdfUrl'] != null &&
-                  data['pdfUrl']
-                      .toString()
-                      .isNotEmpty)
-
+                  data['pdfUrl'].toString().isNotEmpty)
                 Padding(
-                  padding:
-                  const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.only(bottom: 20),
 
                   child: SizedBox(
                     width: double.infinity,
@@ -390,24 +317,16 @@ class _AdminProposalDetailsScreenState
 
                       label: const Text(
                         'Open Proposal PDF',
-                        style:
-                        TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white),
                       ),
 
-                      style:
-                      ElevatedButton.styleFrom(
-                        backgroundColor:
-                        Colors.redAccent,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
 
-                        padding:
-                        const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
 
-                        shape:
-                        RoundedRectangleBorder(
-                          borderRadius:
-                          BorderRadius.circular(18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
                         ),
                       ),
                     ),
@@ -420,44 +339,27 @@ class _AdminProposalDetailsScreenState
                 controller: commentController,
                 maxLines: 4,
 
-                style: const TextStyle(
-                  color: Colors.white,
-                ),
+                style: const TextStyle(color: Colors.white),
 
                 decoration: InputDecoration(
                   labelText: 'Admin Comment',
 
-                  labelStyle:
-                  const TextStyle(
-                    color: Colors.white70,
+                  labelStyle: const TextStyle(color: Colors.white70),
+
+                  hintText: 'Add remarks or reason for approval/rejection',
+
+                  hintStyle: const TextStyle(color: Colors.white38),
+
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+
+                    borderSide: const BorderSide(color: Colors.white38),
                   ),
 
-                  hintText:
-                  'Add remarks or reason for approval/rejection',
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
 
-                  hintStyle:
-                  const TextStyle(
-                    color: Colors.white38,
-                  ),
-
-                  enabledBorder:
-                  OutlineInputBorder(
-                    borderRadius:
-                    BorderRadius.circular(18),
-
-                    borderSide:
-                    const BorderSide(
-                      color: Colors.white38,
-                    ),
-                  ),
-
-                  focusedBorder:
-                  OutlineInputBorder(
-                    borderRadius:
-                    BorderRadius.circular(18),
-
-                    borderSide:
-                    const BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xFFB99CFF),
                       width: 2,
                     ),
@@ -468,41 +370,28 @@ class _AdminProposalDetailsScreenState
               const SizedBox(height: 26),
 
               if (status == 'pending') ...[
-
                 SizedBox(
                   width: double.infinity,
 
                   child: ElevatedButton.icon(
                     onPressed: isUpdating
                         ? null
-                        : () => updateProposalStatus(
-                        'approved'),
+                        : () => updateProposalStatus('approved'),
 
-                    icon: const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.check, color: Colors.white),
 
                     label: const Text(
                       'Approve Proposal',
-                      style:
-                      TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white),
                     ),
 
-                    style:
-                    ElevatedButton.styleFrom(
-                      backgroundColor:
-                      Colors.green,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
 
-                      padding:
-                      const EdgeInsets.symmetric(
-                        vertical: 15,
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
 
-                      shape:
-                      RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
                     ),
                   ),
@@ -516,47 +405,30 @@ class _AdminProposalDetailsScreenState
                   child: ElevatedButton.icon(
                     onPressed: isUpdating
                         ? null
-                        : () => updateProposalStatus(
-                        'rejected'),
+                        : () => updateProposalStatus('rejected'),
 
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.close, color: Colors.white),
 
                     label: const Text(
                       'Reject Proposal',
-                      style:
-                      TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white),
                     ),
 
-                    style:
-                    ElevatedButton.styleFrom(
-                      backgroundColor:
-                      Colors.redAccent,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
 
-                      padding:
-                      const EdgeInsets.symmetric(
-                        vertical: 15,
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
 
-                      shape:
-                      RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
                     ),
                   ),
                 ),
-              ]
-
-              else
-
+              ] else
                 const Text(
                   'This proposal has already been reviewed.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(color: Colors.white70),
                 ),
             ],
           ),
@@ -565,21 +437,14 @@ class _AdminProposalDetailsScreenState
     );
   }
 
-  Widget _detailItem(
-      String title,
-      dynamic value,
-      ) {
-
+  Widget _detailItem(String title, dynamic value) {
     return Padding(
-      padding:
-      const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 18),
 
       child: Column(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           Text(
             title,
 
@@ -595,10 +460,7 @@ class _AdminProposalDetailsScreenState
           Text(
             value?.toString() ?? '-',
 
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
         ],
       ),
@@ -606,11 +468,9 @@ class _AdminProposalDetailsScreenState
   }
 
   Widget _statusBadge(String status) {
-
     Color color;
 
     switch (status.toLowerCase()) {
-
       case 'approved':
         color = Colors.greenAccent;
         break;
@@ -624,16 +484,12 @@ class _AdminProposalDetailsScreenState
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
 
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
 
-        borderRadius:
-        BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20),
 
         border: Border.all(color: color),
       ),
@@ -641,10 +497,7 @@ class _AdminProposalDetailsScreenState
       child: Text(
         status.toUpperCase(),
 
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }

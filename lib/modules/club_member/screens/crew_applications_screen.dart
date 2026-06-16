@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CrewApplicationsScreen extends StatefulWidget {
-  const CrewApplicationsScreen({super.key});
+  final bool isTab;
+  const CrewApplicationsScreen({super.key, this.isTab = false});
 
   @override
   State<CrewApplicationsScreen> createState() => _CrewApplicationsScreenState();
@@ -26,11 +27,116 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0D0820),
-        body: Center(child: Text('User not logged in', style: TextStyle(color: Colors.white))),
+      return Center(
+        child: Text(
+          'User not logged in',
+          style: TextStyle(color: Colors.white),
+        ),
       );
     }
+
+    Widget content = Column(
+      children: [
+        _buildFilterChips(user.uid),
+        const SizedBox(height: 10),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('crewApplications')
+                .where('organizerId', isEqualTo: user.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF9B6DFF)),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Error: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                );
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+
+              final filteredDocs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final status = (data['status'] ?? '').toString().toLowerCase();
+                return status == _selectedStatus.toLowerCase();
+              }).toList();
+
+              filteredDocs.sort((a, b) {
+                final aTime = _parseDate((a.data() as Map)['createdAt']);
+                final bTime = _parseDate((b.data() as Map)['createdAt']);
+                return bTime.compareTo(aTime);
+              });
+
+              if (docs.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.assignment_outlined,
+                          size: 64,
+                          color: Colors.white24,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No applications yet.',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Applications for your events will appear here once students apply.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white38),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (filteredDocs.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No $_selectedStatus applications found.',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                itemCount: filteredDocs.length,
+                itemBuilder: (context, index) {
+                  final app =
+                      filteredDocs[index].data() as Map<String, dynamic>;
+                  final appId = filteredDocs[index].id;
+                  return _buildApplicationCard(appId, app);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+
+    if (widget.isTab) return content;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0820),
@@ -40,94 +146,7 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          _buildFilterChips(user.uid),
-          const SizedBox(height: 10),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('crewApplications')
-                  .where('organizerId', isEqualTo: user.uid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFF9B6DFF)));
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
-                  );
-                }
-
-                final docs = snapshot.data?.docs ?? [];
-                
-                // Filter by status locally
-                final filteredDocs = docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final status = (data['status'] ?? '').toString().toLowerCase();
-                  return status == _selectedStatus.toLowerCase();
-                }).toList();
-
-                // Sort manually in memory (newest first)
-                filteredDocs.sort((a, b) {
-                  final aTime = _parseDate((a.data() as Map)['createdAt']);
-                  final bTime = _parseDate((b.data() as Map)['createdAt']);
-                  return bTime.compareTo(aTime);
-                });
-
-                if (docs.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.assignment_outlined, size: 64, color: Colors.white24),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No applications yet.',
-                            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Applications for your events will appear here once students apply.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white38),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                if (filteredDocs.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No $_selectedStatus applications found.',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: filteredDocs.length,
-                  itemBuilder: (context, index) {
-                    final app = filteredDocs[index].data() as Map<String, dynamic>;
-                    final appId = filteredDocs[index].id;
-                    return _buildApplicationCard(appId, app);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      body: content,
     );
   }
 
@@ -139,10 +158,28 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         final docs = snapshot.data?.docs ?? [];
-        
-        int pCount = docs.where((d) => (d.data() as Map)['status']?.toString().toLowerCase() == 'pending').length;
-        int aCount = docs.where((d) => (d.data() as Map)['status']?.toString().toLowerCase() == 'accepted').length;
-        int rCount = docs.where((d) => (d.data() as Map)['status']?.toString().toLowerCase() == 'rejected').length;
+
+        int pCount = docs
+            .where(
+              (d) =>
+                  (d.data() as Map)['status']?.toString().toLowerCase() ==
+                  'pending',
+            )
+            .length;
+        int aCount = docs
+            .where(
+              (d) =>
+                  (d.data() as Map)['status']?.toString().toLowerCase() ==
+                  'accepted',
+            )
+            .length;
+        int rCount = docs
+            .where(
+              (d) =>
+                  (d.data() as Map)['status']?.toString().toLowerCase() ==
+                  'rejected',
+            )
+            .length;
 
         final statuses = [
           {'label': 'Pending', 'count': pCount},
@@ -175,16 +212,20 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
                   selectedColor: const Color(0xFF9B6DFF),
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : Colors.white70,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                   checkmarkColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               );
             },
           ),
         );
-      }
+      },
     );
   }
 
@@ -195,9 +236,7 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2B1D44),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFB99CFF).withOpacity(0.3),
-        ),
+        border: Border.all(color: const Color(0xFFB99CFF).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +260,11 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
           const SizedBox(height: 4),
           Text(
             'Event: ${app['eventTitle'] ?? 'Unnamed Event'}',
-            style: const TextStyle(color: Color(0xFFB99CFF), fontSize: 14, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: Color(0xFFB99CFF),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const Divider(color: Colors.white12, height: 24),
           _infoRow(Icons.psychology, 'Skills', app['skills']),
@@ -230,11 +273,17 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
           const SizedBox(height: 8),
           _infoRow(Icons.phone, 'Contact', app['contactNo']),
 
-          if (app['status']?.toString().toLowerCase() == 'rejected' && app['rejectionReason'] != null) ...[
+          if (app['status']?.toString().toLowerCase() == 'rejected' &&
+              app['rejectionReason'] != null) ...[
             const SizedBox(height: 8),
-            _infoRow(Icons.error_outline, 'Rejection Reason', app['rejectionReason'], color: Colors.redAccent),
+            _infoRow(
+              Icons.error_outline,
+              'Rejection Reason',
+              app['rejectionReason'],
+              color: Colors.redAccent,
+            ),
           ],
-          
+
           if (app['status']?.toString().toLowerCase() == 'pending') ...[
             const SizedBox(height: 20),
             Row(
@@ -245,7 +294,9 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.redAccent,
                       side: const BorderSide(color: Colors.redAccent),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: const Text('Reject'),
@@ -258,7 +309,9 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade700,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: const Text('Accept'),
@@ -272,7 +325,12 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String? value, {Color color = Colors.white70}) {
+  Widget _infoRow(
+    IconData icon,
+    String label,
+    String? value, {
+    Color color = Colors.white70,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -283,7 +341,10 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
             text: TextSpan(
               style: GoogleFonts.quicksand(color: color, fontSize: 14),
               children: [
-                TextSpan(text: '$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(
+                  text: '$label: ',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 TextSpan(text: value ?? '-'),
               ],
             ),
@@ -296,9 +357,14 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
   Widget _statusIndicator(String status) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'accepted': color = Colors.green; break;
-      case 'rejected': color = Colors.redAccent; break;
-      default: color = Colors.orangeAccent;
+      case 'accepted':
+        color = Colors.green;
+        break;
+      case 'rejected':
+        color = Colors.redAccent;
+        break;
+      default:
+        color = Colors.orangeAccent;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -309,7 +375,11 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -318,9 +388,12 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
     try {
       final eventId = app['eventId'];
       if (eventId == null) throw Exception('Event ID is missing');
-      
-      final eventDoc = await FirebaseFirestore.instance.collection('events').doc(eventId).get();
-      
+
+      final eventDoc = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(eventId)
+          .get();
+
       if (!eventDoc.exists) {
         throw Exception('Event no longer exists.');
       }
@@ -331,18 +404,25 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
 
       if (crewSlots > 0 && acceptedCount >= crewSlots) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No more crew slots available for this event.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No more crew slots available for this event.'),
+          ),
+        );
         return;
       }
 
-      await FirebaseFirestore.instance.collection('crewApplications').doc(appId).update({
-        'status': 'Accepted',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection('crewApplications')
+          .doc(appId)
+          .update({
+            'status': 'Accepted',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
-      await FirebaseFirestore.instance.collection('events').doc(eventId).update({
-        'acceptedCrewCount': FieldValue.increment(1),
-      });
+      await FirebaseFirestore.instance.collection('events').doc(eventId).update(
+        {'acceptedCrewCount': FieldValue.increment(1)},
+      );
 
       await FirebaseFirestore.instance.collection('eventCrewMembers').add({
         'applicationId': appId,
@@ -356,7 +436,8 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
       await FirebaseFirestore.instance.collection('notifications').add({
         'userId': app['userId'],
         'title': 'Crew Application Accepted',
-        'message': 'Congratulations! You have been accepted as crew for \"${app['eventTitle'] ?? 'the event'}\".',
+        'message':
+            'Congratulations! You have been accepted as crew for "${app['eventTitle'] ?? 'the event'}".',
         'type': 'crew_acceptance',
         'eventId': eventId,
         'createdAt': FieldValue.serverTimestamp(),
@@ -364,10 +445,14 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application accepted!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Application accepted!')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -377,21 +462,32 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2B1D44),
-        title: const Text('Reject Application', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Reject Application',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: reasonController,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
             hintText: 'Enter rejection reason (optional)',
             hintStyle: TextStyle(color: Colors.white38),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white24),
+            ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Reject',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -399,18 +495,24 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
 
     if (result == true) {
       try {
-        final rejectionReason = reasonController.text.trim().isEmpty ? 'Not specified' : reasonController.text.trim();
-        
-        await FirebaseFirestore.instance.collection('crewApplications').doc(appId).update({
-          'status': 'Rejected',
-          'rejectionReason': rejectionReason,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        final rejectionReason = reasonController.text.trim().isEmpty
+            ? 'Not specified'
+            : reasonController.text.trim();
+
+        await FirebaseFirestore.instance
+            .collection('crewApplications')
+            .doc(appId)
+            .update({
+              'status': 'Rejected',
+              'rejectionReason': rejectionReason,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
 
         await FirebaseFirestore.instance.collection('notifications').add({
           'userId': app['userId'],
           'title': 'Crew Application Rejected',
-          'message': 'Your application for \"${app['eventTitle'] ?? 'the event'}\" was rejected. Reason: $rejectionReason',
+          'message':
+              'Your application for "${app['eventTitle'] ?? 'the event'}" was rejected. Reason: $rejectionReason',
           'type': 'crew_rejection',
           'eventId': app['eventId'],
           'createdAt': FieldValue.serverTimestamp(),
@@ -418,10 +520,14 @@ class _CrewApplicationsScreenState extends State<CrewApplicationsScreen> {
         });
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Application rejected.')));
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

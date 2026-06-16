@@ -31,16 +31,21 @@ class _EditProposalScreenState extends State<EditProposalScreen> {
   void initState() {
     super.initState();
 
-    programNameController =
-        TextEditingController(text: widget.proposalData['programName'] ?? '');
-    descriptionController =
-        TextEditingController(text: widget.proposalData['description'] ?? '');
-    objectivesController =
-        TextEditingController(text: widget.proposalData['objectives'] ?? '');
-    venueController =
-        TextEditingController(text: widget.proposalData['venue'] ?? '');
-    budgetController =
-        TextEditingController(text: widget.proposalData['budget'] ?? '');
+    programNameController = TextEditingController(
+      text: widget.proposalData['programName'] ?? '',
+    );
+    descriptionController = TextEditingController(
+      text: widget.proposalData['description'] ?? '',
+    );
+    objectivesController = TextEditingController(
+      text: widget.proposalData['objectives'] ?? '',
+    );
+    venueController = TextEditingController(
+      text: widget.proposalData['venue'] ?? '',
+    );
+    budgetController = TextEditingController(
+      text: widget.proposalData['budget'] ?? '',
+    );
 
     organizerType = widget.proposalData['organizerType'] ?? 'Club';
 
@@ -90,15 +95,15 @@ class _EditProposalScreenState extends State<EditProposalScreen> {
           .collection('proposals')
           .doc(widget.proposalId)
           .update({
-        'programName': programNameController.text.trim(),
-        'description': descriptionController.text.trim(),
-        'objectives': objectivesController.text.trim(),
-        'venue': venueController.text.trim(),
-        'budget': budgetController.text.trim(),
-        'organizerType': organizerType,
-        'programDate': Timestamp.fromDate(selectedDate!),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'programName': programNameController.text.trim(),
+            'description': descriptionController.text.trim(),
+            'objectives': objectivesController.text.trim(),
+            'venue': venueController.text.trim(),
+            'budget': budgetController.text.trim(),
+            'organizerType': organizerType,
+            'programDate': Timestamp.fromDate(selectedDate!),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (!mounted) return;
 
@@ -109,9 +114,9 @@ class _EditProposalScreenState extends State<EditProposalScreen> {
       Navigator.pop(context);
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating proposal: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating proposal: $e')));
     }
   }
 
@@ -203,7 +208,7 @@ class _EditProposalScreenState extends State<EditProposalScreen> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  value: organizerType,
+                  initialValue: organizerType,
                   dropdownColor: const Color(0xFF2B1D44),
                   decoration: _inputDecoration(
                     label: 'Organizer Type',
@@ -325,10 +330,7 @@ class _EditProposalScreenState extends State<EditProposalScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(
-          color: Color(0xFFB99CFF),
-          width: 2,
-        ),
+        borderSide: const BorderSide(color: Color(0xFFB99CFF), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),

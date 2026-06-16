@@ -19,7 +19,10 @@ class ViewFeedbackScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF110D27),
       appBar: AppBar(
-        title: Text('Feedback: $eventTitle', style: const TextStyle(fontSize: 18)),
+        title: Text(
+          'Feedback: $eventTitle',
+          style: const TextStyle(fontSize: 18),
+        ),
         backgroundColor: const Color(0xFF241B3D),
         foregroundColor: Colors.white,
       ),
@@ -41,7 +44,12 @@ class ViewFeedbackScreen extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent)));
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              );
             }
 
             final feedbacks = snapshot.data ?? [];
@@ -51,9 +59,16 @@ class ViewFeedbackScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.rate_review_outlined, color: Colors.white24, size: 64),
+                    const Icon(
+                      Icons.rate_review_outlined,
+                      color: Colors.white24,
+                      size: 64,
+                    ),
                     const SizedBox(height: 16),
-                    Text('No feedback submitted yet.', style: GoogleFonts.quicksand(color: Colors.white70)),
+                    Text(
+                      'No feedback submitted yet.',
+                      style: GoogleFonts.quicksand(color: Colors.white70),
+                    ),
                   ],
                 ),
               );
@@ -71,7 +86,10 @@ class ViewFeedbackScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: Color(0xFFBFA8FF), width: 0.5),
+                    side: const BorderSide(
+                      color: Color(0xFFBFA8FF),
+                      width: 0.5,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -83,14 +101,20 @@ class ViewFeedbackScreen extends StatelessWidget {
                           children: [
                             Text(
                               f['userName'] ?? 'Anonymous',
-                              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Row(
-                              children: List.generate(5, (i) => Icon(
-                                i < rating ? Icons.star : Icons.star_border,
-                                color: Colors.amber,
-                                size: 16,
-                              )),
+                              children: List.generate(
+                                5,
+                                (i) => Icon(
+                                  i < rating ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -104,7 +128,10 @@ class ViewFeedbackScreen extends StatelessWidget {
                           alignment: Alignment.bottomRight,
                           child: Text(
                             _formatDate(f['submittedAt']),
-                            style: GoogleFonts.quicksand(color: Colors.white38, fontSize: 11),
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white38,
+                              fontSize: 11,
+                            ),
                           ),
                         ),
                       ],
@@ -121,7 +148,6 @@ class ViewFeedbackScreen extends StatelessWidget {
 
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return '';
-    // Handle Timestamp or other formats
-    return 'Recently'; 
+    return 'Recently';
   }
 }

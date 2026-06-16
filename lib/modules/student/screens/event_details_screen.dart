@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../events/models/event_model.dart';
 import '../../participation/models/participation_model.dart';
 import '../../participation/services/participation_service.dart';
-import 'apply_as_crew_screen.dart';
+import 'event_registration_screen.dart';
+import '../../../core/localization/app_translations.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -12,6 +15,7 @@ class EventDetailsScreen extends StatefulWidget {
   final String location;
   final String description;
   final String organizerId;
+  final String? imageUrl;
 
   const EventDetailsScreen({
     super.key,
@@ -21,6 +25,7 @@ class EventDetailsScreen extends StatefulWidget {
     required this.location,
     required this.description,
     required this.organizerId,
+    this.imageUrl,
   });
 
   @override
@@ -29,269 +34,226 @@ class EventDetailsScreen extends StatefulWidget {
 
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   final ParticipationService _participationService = ParticipationService();
-  bool _isRegistering = false;
-
-  Future<void> _handleRegistration() async {
-    setState(() => _isRegistering = true);
-    try {
-      await _participationService.registerForEvent(widget.eventId, widget.title);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registered successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isRegistering = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF110D27),
-      appBar: AppBar(
-        title: const Text('Event Details'),
-        backgroundColor: const Color(0xFF241B3D),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('events').doc(widget.eventId).snapshots(),
-        builder: (context, snapshot) {
-          int slots = 0;
-          int accepted = 0;
-          String deadlineStr = 'No deadline set';
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0B0820),
+        body: Center(
+          child: Text('Not signed in', style: TextStyle(color: Colors.white)),
+        ),
+      );
+    }
 
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            slots = data['crewSlots'] ?? 0;
-            accepted = data['acceptedCrewCount'] ?? 0;
-            if (data['crewDeadline'] != null) {
-              final Timestamp ts = data['crewDeadline'];
-              final d = ts.toDate();
-              deadlineStr = '${d.day}/${d.month}/${d.year}';
-            }
-          }
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, userSnapshot) {
+        final lang = userSnapshot.data?.data()?['language'] ?? 'en';
 
-          return Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF110D27), Color(0xFF1E1533), Color(0xFF2A2147)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF241B3D),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFBFA8FF), width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF7E57C2),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: const Icon(Icons.event_available_rounded, color: Colors.white, size: 38),
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    Text(
-                      widget.title,
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 18),
-                    _detailRow(icon: Icons.calendar_month_rounded, label: 'Date', value: widget.date),
-                    const SizedBox(height: 12),
-                    _detailRow(icon: Icons.location_on_rounded, label: 'Location', value: widget.location),
-                    const SizedBox(height: 12),
-                    _detailRow(
-                      icon: Icons.group_outlined,
-                      label: 'Crew Slots',
-                      value: slots > 0 ? '${slots - accepted} remaining (out of $slots)' : 'No limit',
-                    ),
-                    const SizedBox(height: 12),
-                    _detailRow(icon: Icons.timer_outlined, label: 'Crew Application Deadline', value: deadlineStr),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Description',
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.description,
-                      style: GoogleFonts.quicksand(color: Colors.white70, fontSize: 15, height: 1.5),
-                    ),
-                    const SizedBox(height: 30),
-                    
-                    StreamBuilder<ParticipationModel?>(
-                      stream: _participationService.getUserParticipation(widget.eventId),
-                      builder: (context, partSnapshot) {
-                        final isRegistered = partSnapshot.hasData && partSnapshot.data != null;
-                        
-                        return Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: isRegistered || _isRegistering ? null : _handleRegistration,
-                                icon: isRegistered 
-                                  ? const Icon(Icons.check_circle_outline)
-                                  : (_isRegistering ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.confirmation_number_rounded)),
-                                label: Text(isRegistered ? 'Registered' : 'Register for Event'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isRegistered ? Colors.green.shade700 : const Color(0xFF9B6DFF),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 15),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                ),
+        return Scaffold(
+          backgroundColor: const Color(0xFF0B0820),
+          body: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('events')
+                .doc(widget.eventId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData)
+                return const Center(child: CircularProgressIndicator());
+              if (!snapshot.data!.exists)
+                return Center(
+                  child: Text(
+                    AppTranslations.get(lang, 'event_not_found'),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+
+              final event = EventModel.fromFirestore(snapshot.data!);
+              final seatsLeft = event.capacity - event.registeredCount;
+              final deadline = event.registrationDeadline != null
+                  ? '${event.registrationDeadline!.day}/${event.registrationDeadline!.month}/${event.registrationDeadline!.year}'
+                  : AppTranslations.get(lang, 'not_applicable');
+
+              return CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(event, lang),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.title,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildInfoRow(
+                            Icons.calendar_today_rounded,
+                            widget.date,
+                            event.startTime ?? '9:00 AM - 6:00 PM',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInfoRow(
+                            Icons.location_on_rounded,
+                            widget.location,
+                            '',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInfoRow(
+                            Icons.person_outline_rounded,
+                            event.organizerName ?? 'Computer Society UTM',
+                            AppTranslations.get(lang, 'organizer'),
+                          ),
+
+                          const SizedBox(height: 32),
+                          _buildStatsSection(event, seatsLeft, deadline, lang),
+
+                          const SizedBox(height: 32),
+                          Text(
+                            AppTranslations.get(lang, 'about_this_event'),
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            event.description,
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                              fontSize: 15,
+                              height: 1.6,
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+                          Text(
+                            AppTranslations.get(lang, 'what_to_expect'),
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          if (event.whatToExpect != null &&
+                              event.whatToExpect!.isNotEmpty)
+                            ...event.whatToExpect!.map(
+                              (item) => _buildExpectationItem(item),
+                            )
+                          else ...[
+                            _buildExpectationItem(
+                              AppTranslations.get(
+                                lang,
+                                'competitive_programming',
                               ),
                             ),
-                            if (isRegistered) ...[
-                              const SizedBox(height: 12),
-                              Text(
-                                'Status: ${partSnapshot.data!.status}',
-                                style: GoogleFonts.quicksand(color: Colors.white, fontWeight: FontWeight.bold),
+                            _buildExpectationItem(
+                              AppTranslations.get(lang, 'problem_solving'),
+                            ),
+                            _buildExpectationItem(
+                              AppTranslations.get(
+                                lang,
+                                'networking_opportunities',
                               ),
-                              if (partSnapshot.data!.status == 'Attended' && !partSnapshot.data!.feedbackSubmitted) ...[
-                                const SizedBox(height: 12),
-                                _buildFeedbackButton(partSnapshot.data!.id!),
-                              ] else if (partSnapshot.data!.feedbackSubmitted) ...[
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Feedback submitted. Thank you!',
-                                  style: GoogleFonts.quicksand(color: Colors.greenAccent, fontSize: 13),
-                                ),
-                              ]
-                            ],
+                            ),
+                            _buildExpectationItem(
+                              AppTranslations.get(lang, 'certificates'),
+                            ),
                           ],
-                        );
-                      }
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ApplyAsCrewScreen(
-                                eventId: widget.eventId,
-                                eventTitle: widget.title,
-                                eventOrganizerId: widget.organizerId,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.group_add_rounded),
-                        label: const Text('Apply as Crew'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFBFA8FF),
-                          side: const BorderSide(color: Color(0xFFBFA8FF)),
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
+
+                          const SizedBox(height: 120),
+                        ],
                       ),
                     ),
+                  ),
+                ],
+              );
+            },
+          ),
+          bottomSheet: _buildBottomBar(lang),
+        );
+      },
+    );
+  }
+
+  Widget _buildSliverAppBar(EventModel event, String lang) {
+    return SliverAppBar(
+      expandedHeight: 250,
+      backgroundColor: const Color(0xFF0B0820),
+      pinned: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.share_outlined, color: Colors.white),
+          onPressed: () {},
+        ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            event.imageUrl != null && event.imageUrl!.isNotEmpty
+                ? Image.network(event.imageUrl!, fit: BoxFit.cover)
+                : Container(
+                    color: const Color(0xFF2A1E4D),
+                    child: const Icon(
+                      Icons.event,
+                      size: 80,
+                      color: Colors.white24,
+                    ),
+                  ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.transparent,
+                    const Color(0xFF0B0820),
                   ],
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFeedbackButton(String participationId) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () => _showFeedbackDialog(participationId),
-        icon: const Icon(Icons.rate_review_rounded),
-        label: const Text('Submit Feedback'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange.shade800,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
-    );
-  }
-
-  void _showFeedbackDialog(String participationId) {
-    final TextEditingController commentController = TextEditingController();
-    double rating = 5.0;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF241B3D),
-          title: Text('Event Feedback', style: GoogleFonts.poppins(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('How was the event?', style: GoogleFonts.quicksand(color: Colors.white70)),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) => IconButton(
-                  icon: Icon(
-                    index < rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
+            Positioned(
+              top: 100,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.greenAccent.withOpacity(0.5),
                   ),
-                  onPressed: () => setState(() => rating = index + 1.0),
-                )),
-              ),
-              TextField(
-                controller: commentController,
-                maxLines: 3,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Share your thoughts...',
-                  hintStyle: TextStyle(color: Colors.white30),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                ),
+                child: Text(
+                  AppTranslations.get(lang, 'open'),
+                  style: GoogleFonts.poppins(
+                    color: Colors.greenAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await _participationService.submitFeedback(
-                  participationId, 
-                  commentController.text, 
-                  rating
-                );
-                if (context.mounted) Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9B6DFF)),
-              child: const Text('Submit'),
             ),
           ],
         ),
@@ -299,28 +261,175 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _detailRow({required IconData icon, required String label, required String value}) {
+  Widget _buildInfoRow(IconData icon, String primary, String secondary) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1533),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: const Color(0xFFB794FF), size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                primary,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (secondary.isNotEmpty)
+                Text(
+                  secondary,
+                  style: GoogleFonts.quicksand(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsSection(
+    EventModel event,
+    int seatsLeft,
+    String deadline,
+    String lang,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1533),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF2A1E4D),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: const Color(0xFFBFA8FF), size: 24),
+          _statItem(AppTranslations.get(lang, 'fee'), 'RM${event.fee.toInt()}'),
+          _statDivider(),
+          _statItem(
+            AppTranslations.get(lang, 'seats_left'),
+            '$seatsLeft/${event.capacity}',
+          ),
+          _statDivider(),
+          _statItem(AppTranslations.get(lang, 'deadline'), deadline),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.quicksand(color: Colors.white54, fontSize: 11),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            color: const Color(0xFFB794FF),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statDivider() {
+    return Container(height: 30, width: 1, color: Colors.white10);
+  }
+
+  Widget _buildExpectationItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.check_circle_rounded,
+            color: Color(0xFFB794FF),
+            size: 20,
+          ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: GoogleFonts.quicksand(color: Colors.white54, fontSize: 13)),
-                const SizedBox(height: 3),
-                Text(value, style: GoogleFonts.quicksand(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-              ],
-            ),
+          Text(
+            text,
+            style: GoogleFonts.quicksand(color: Colors.white70, fontSize: 15),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(String lang) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0B0820),
+        border: Border(top: BorderSide(color: Colors.white10)),
+      ),
+      child: StreamBuilder<ParticipationModel?>(
+        stream: _participationService.getUserParticipation(widget.eventId),
+        builder: (context, partSnapshot) {
+          final isRegistered =
+              partSnapshot.hasData && partSnapshot.data != null;
+
+          return SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: isRegistered
+                  ? null
+                  : () async {
+                      final eventDoc = await FirebaseFirestore.instance
+                          .collection('events')
+                          .doc(widget.eventId)
+                          .get();
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EventRegistrationScreen(
+                              event: EventModel.fromFirestore(eventDoc),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isRegistered
+                    ? Colors.green.shade700
+                    : const Color(0xFF6C48FF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                isRegistered
+                    ? AppTranslations.get(lang, 'already_registered')
+                    : AppTranslations.get(lang, 'register_now'),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

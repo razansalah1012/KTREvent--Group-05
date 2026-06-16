@@ -7,10 +7,22 @@ class EventModel {
   final DateTime date;
   final String location;
   final String organizerId;
+  final String? organizerName;
   final int crewSlots;
   final DateTime? crewDeadline;
   final int acceptedCrewCount;
   final DateTime? createdAt;
+  final String? imageUrl;
+  final List<RegistrationField>? registrationFields;
+  final double fee;
+  final int capacity;
+  final int registeredCount;
+  final String? startTime;
+  final String? endTime;
+  final DateTime? registrationDeadline;
+  final String? category;
+  final List<String>? whatToExpect;
+  final String? paperworkUrl;
 
   EventModel({
     this.id,
@@ -19,10 +31,22 @@ class EventModel {
     required this.date,
     required this.location,
     required this.organizerId,
+    this.organizerName,
     this.crewSlots = 0,
     this.crewDeadline,
     this.acceptedCrewCount = 0,
     this.createdAt,
+    this.imageUrl,
+    this.registrationFields,
+    this.fee = 0.0,
+    this.capacity = 100,
+    this.registeredCount = 0,
+    this.startTime,
+    this.endTime,
+    this.registrationDeadline,
+    this.category,
+    this.whatToExpect,
+    this.paperworkUrl,
   });
 
   Map<String, dynamic> toCreateMap() {
@@ -32,11 +56,27 @@ class EventModel {
       'date': Timestamp.fromDate(date),
       'location': location,
       'organizerId': organizerId,
+      'organizerName': organizerName,
       'crewSlots': crewSlots,
-      'crewDeadline': crewDeadline != null ? Timestamp.fromDate(crewDeadline!) : null,
+      'crewDeadline': crewDeadline != null
+          ? Timestamp.fromDate(crewDeadline!)
+          : null,
       'acceptedCrewCount': acceptedCrewCount,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,
+      'imageUrl': imageUrl,
+      'registrationFields': registrationFields?.map((f) => f.toMap()).toList(),
+      'fee': fee,
+      'capacity': capacity,
+      'registeredCount': registeredCount,
+      'startTime': startTime,
+      'endTime': endTime,
+      'registrationDeadline': registrationDeadline != null
+          ? Timestamp.fromDate(registrationDeadline!)
+          : null,
+      'category': category,
+      'whatToExpect': whatToExpect,
+      'paperworkUrl': paperworkUrl,
     };
   }
 
@@ -47,10 +87,26 @@ class EventModel {
       'date': Timestamp.fromDate(date),
       'location': location,
       'organizerId': organizerId,
+      'organizerName': organizerName,
       'crewSlots': crewSlots,
-      'crewDeadline': crewDeadline != null ? Timestamp.fromDate(crewDeadline!) : null,
+      'crewDeadline': crewDeadline != null
+          ? Timestamp.fromDate(crewDeadline!)
+          : null,
       'acceptedCrewCount': acceptedCrewCount,
       'updatedAt': FieldValue.serverTimestamp(),
+      'imageUrl': imageUrl,
+      'registrationFields': registrationFields?.map((f) => f.toMap()).toList(),
+      'fee': fee,
+      'capacity': capacity,
+      'registeredCount': registeredCount,
+      'startTime': startTime,
+      'endTime': endTime,
+      'registrationDeadline': registrationDeadline != null
+          ? Timestamp.fromDate(registrationDeadline!)
+          : null,
+      'category': category,
+      'whatToExpect': whatToExpect,
+      'paperworkUrl': paperworkUrl,
     };
   }
 
@@ -74,10 +130,68 @@ class EventModel {
       date: _parseDate(data['date']),
       location: (data['location'] ?? '').toString(),
       organizerId: (data['organizerId'] ?? '').toString(),
+      organizerName: data['organizerName'] as String?,
       crewSlots: int.tryParse(data['crewSlots']?.toString() ?? '0') ?? 0,
-      crewDeadline: data['crewDeadline'] != null ? _parseDate(data['crewDeadline']) : null,
-      acceptedCrewCount: int.tryParse(data['acceptedCrewCount']?.toString() ?? '0') ?? 0,
-      createdAt: data['createdAt'] != null ? _parseDate(data['createdAt']) : null,
+      crewDeadline: data['crewDeadline'] != null
+          ? _parseDate(data['crewDeadline'])
+          : null,
+      acceptedCrewCount:
+          int.tryParse(data['acceptedCrewCount']?.toString() ?? '0') ?? 0,
+      createdAt: data['createdAt'] != null
+          ? _parseDate(data['createdAt'])
+          : null,
+      imageUrl: data['imageUrl'] as String?,
+      registrationFields: (data['registrationFields'] as List<dynamic>?)
+          ?.map((f) => RegistrationField.fromMap(f as Map<String, dynamic>))
+          .toList(),
+      fee: double.tryParse(data['fee']?.toString() ?? '0.0') ?? 0.0,
+      capacity: int.tryParse(data['capacity']?.toString() ?? '100') ?? 100,
+      registeredCount:
+          int.tryParse(data['registeredCount']?.toString() ?? '0') ?? 0,
+      startTime: data['startTime'] as String?,
+      endTime: data['endTime'] as String?,
+      registrationDeadline: data['registrationDeadline'] != null
+          ? _parseDate(data['registrationDeadline'])
+          : null,
+      category: data['category'] as String?,
+      whatToExpect: (data['whatToExpect'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      paperworkUrl: data['paperworkUrl'] as String?,
+    );
+  }
+}
+
+class RegistrationField {
+  final String label;
+  final String type;
+  final bool isRequired;
+  final List<String>? options;
+
+  RegistrationField({
+    required this.label,
+    required this.type,
+    this.isRequired = true,
+    this.options,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'label': label,
+      'type': type,
+      'isRequired': isRequired,
+      'options': options,
+    };
+  }
+
+  factory RegistrationField.fromMap(Map<String, dynamic> map) {
+    return RegistrationField(
+      label: map['label'] ?? '',
+      type: map['type'] ?? 'text',
+      isRequired: map['isRequired'] ?? true,
+      options: (map['options'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
     );
   }
 }

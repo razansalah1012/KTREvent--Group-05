@@ -3,15 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// A screen that allows the authenticated user to update their profile.
-///
-/// This page presents a form prefilled with the user's current full name
-/// and email. Only the full name can be edited; the email is displayed
-/// read‑only because changing it requires reauthentication. Upon saving,
-/// the full name is updated in the `users` collection in Firestore and
-/// in the FirebaseAuth user profile. The UI follows the dark purple
-/// theme used throughout the app and adjusts spacing for smaller
-/// screen heights.
 class UpdateProfileScreen extends StatefulWidget {
   const UpdateProfileScreen({super.key});
 
@@ -29,17 +20,12 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Prefill the form with the current user's information.
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       _emailController.text = user.email ?? '';
-      // Fetch the user's profile document from Firestore to get
-      // the full name. If it exists, update the controller.
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get()
-          .then((doc) {
+      FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((
+        doc,
+      ) {
         if (doc.exists) {
           final data = doc.data();
           if (data != null && data['fullName'] != null) {
@@ -50,9 +36,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }
   }
 
-  /// Saves the updated full name back to Firestore and updates the
-  /// FirebaseAuth user's display name. On success, the screen pops
-  /// and a snackbar is shown. On failure, an error message is set.
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -69,12 +52,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         return;
       }
       final fullName = _nameController.text.trim();
-      // Update Firestore document
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({'fullName': fullName});
-      // Update FirebaseAuth display name
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'fullName': fullName},
+      );
       await user.updateDisplayName(fullName);
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -179,21 +159,26 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                           decoration: InputDecoration(
                             labelText: 'Full Name',
                             prefixIcon: const Icon(Icons.person_outline),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white70),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide:
-                              BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const UnderlineInputBorder(
-                              borderSide:
-                              BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -207,19 +192,21 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                         TextFormField(
                           controller: _emailController,
                           readOnly: true,
-                          style:
-                          GoogleFonts.quicksand(color: Colors.white70),
+                          style: GoogleFonts.quicksand(color: Colors.white70),
                           decoration: InputDecoration(
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email_outlined),
-                            labelStyle:
-                            GoogleFonts.quicksand(color: Colors.white70),
+                            labelStyle: GoogleFonts.quicksand(
+                              color: Colors.white70,
+                            ),
                             enabledBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.white54),
                             ),
                             focusedBorder: const UnderlineInputBorder(
-                              borderSide:
-                              BorderSide(color: Color(0xFF9B6CFF), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFF9B6CFF),
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
@@ -243,24 +230,25 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               backgroundColor: const Color(0xFF8257E5),
                               foregroundColor: Colors.white,
                               disabledForegroundColor: Colors.white70,
-                              disabledBackgroundColor:
-                              const Color(0xFF8257E5).withOpacity(0.55),
+                              disabledBackgroundColor: const Color(
+                                0xFF8257E5,
+                              ).withOpacity(0.55),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: _isLoading
                                 ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
+                                    color: Colors.white,
+                                  )
                                 : Text(
-                              'Save',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                                    'Save',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 12),

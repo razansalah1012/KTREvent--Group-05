@@ -14,7 +14,8 @@ class TrackParticipantsScreen extends StatefulWidget {
   });
 
   @override
-  State<TrackParticipantsScreen> createState() => _TrackParticipantsScreenState();
+  State<TrackParticipantsScreen> createState() =>
+      _TrackParticipantsScreenState();
 }
 
 class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
@@ -25,7 +26,10 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF110D27),
       appBar: AppBar(
-        title: Text('Participants: ${widget.eventTitle}', style: const TextStyle(fontSize: 18)),
+        title: Text(
+          'Participants: ${widget.eventTitle}',
+          style: const TextStyle(fontSize: 18),
+        ),
         backgroundColor: const Color(0xFF241B3D),
         foregroundColor: Colors.white,
       ),
@@ -47,7 +51,12 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent)));
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              );
             }
 
             final participants = snapshot.data ?? [];
@@ -57,9 +66,16 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.people_outline, color: Colors.white24, size: 64),
+                    const Icon(
+                      Icons.people_outline,
+                      color: Colors.white24,
+                      size: 64,
+                    ),
                     const SizedBox(height: 16),
-                    Text('No participants registered yet.', style: GoogleFonts.quicksand(color: Colors.white70)),
+                    Text(
+                      'No participants registered yet.',
+                      style: GoogleFonts.quicksand(color: Colors.white70),
+                    ),
                   ],
                 ),
               );
@@ -75,7 +91,11 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'Total Participants: ${participants.length}',
-                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -120,9 +140,19 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
                     children: [
                       Text(
                         p.userName,
-                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      Text(p.userEmail, style: GoogleFonts.quicksand(color: Colors.white54, fontSize: 13)),
+                      Text(
+                        p.userEmail,
+                        style: GoogleFonts.quicksand(
+                          color: Colors.white54,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -135,17 +165,32 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
               children: [
                 Text(
                   'Reg: ${p.registeredAt.day}/${p.registeredAt.month}/${p.registeredAt.year}',
-                  style: GoogleFonts.quicksand(color: Colors.white38, fontSize: 12),
+                  style: GoogleFonts.quicksand(
+                    color: Colors.white38,
+                    fontSize: 12,
+                  ),
                 ),
                 PopupMenuButton<String>(
                   onSelected: (status) => _updateStatus(p.id!, status),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'Registered', child: Text('Registered')),
-                    const PopupMenuItem(value: 'Attended', child: Text('Attended')),
-                    const PopupMenuItem(value: 'Cancelled', child: Text('Cancelled / Absent')),
+                    const PopupMenuItem(
+                      value: 'Registered',
+                      child: Text('Registered'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'Attended',
+                      child: Text('Attended'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'Cancelled',
+                      child: Text('Cancelled / Absent'),
+                    ),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF9B6DFF).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -154,8 +199,18 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Mark Status', style: TextStyle(color: Color(0xFFBFA8FF), fontSize: 12)),
-                        const Icon(Icons.arrow_drop_down, color: Color(0xFFBFA8FF), size: 16),
+                        const Text(
+                          'Mark Status',
+                          style: TextStyle(
+                            color: Color(0xFFBFA8FF),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          color: Color(0xFFBFA8FF),
+                          size: 16,
+                        ),
                       ],
                     ),
                   ),
@@ -182,17 +237,26 @@ class _TrackParticipantsScreenState extends State<TrackParticipantsScreen> {
       ),
       child: Text(
         status,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Future<void> _updateStatus(String participationId, String status) async {
     try {
-      await _participationService.updateParticipationStatus(participationId, status);
+      await _participationService.updateParticipationStatus(
+        participationId,
+        status,
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

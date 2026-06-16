@@ -15,19 +15,12 @@ class EventService {
         throw Exception('User not logged in');
       }
 
-      final eventToCreate = EventModel(
-        title: event.title,
-        description: event.description,
-        date: event.date,
-        location: event.location,
-        organizerId: currentUser.uid,
-        crewSlots: event.crewSlots,
-        crewDeadline: event.crewDeadline,
-      );
+      final mapToSave = event.toCreateMap();
+      mapToSave['organizerId'] = currentUser.uid;
 
       final docRef = await _firestore
           .collection(_collectionName)
-          .add(eventToCreate.toCreateMap());
+          .add(mapToSave);
 
       event.id = docRef.id;
     } catch (e) {
@@ -47,10 +40,10 @@ class EventService {
         .where('organizerId', isEqualTo: currentUser.uid)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return EventModel.fromFirestore(doc);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            return EventModel.fromFirestore(doc);
+          }).toList();
+        });
   }
 
   Stream<List<EventModel>> getAllEvents() {

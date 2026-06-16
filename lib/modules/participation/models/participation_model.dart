@@ -7,10 +7,11 @@ class ParticipationModel {
   final String userId;
   final String userName;
   final String userEmail;
-  final String status; // Registered / Attended / Cancelled
+  final String status;
   final DateTime registeredAt;
   final DateTime? attendanceMarkedAt;
   final bool feedbackSubmitted;
+  final Map<String, dynamic>? registrationResponses;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +26,7 @@ class ParticipationModel {
     required this.registeredAt,
     this.attendanceMarkedAt,
     this.feedbackSubmitted = false,
+    this.registrationResponses,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,6 +42,7 @@ class ParticipationModel {
       'registeredAt': registeredAt,
       'attendanceMarkedAt': attendanceMarkedAt,
       'feedbackSubmitted': feedbackSubmitted,
+      'registrationResponses': registrationResponses,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -53,10 +56,13 @@ class ParticipationModel {
       final parsed = DateTime.tryParse(value);
       if (parsed != null) return parsed;
     }
-    return DateTime(2000); 
+    return DateTime(2000);
   }
 
-  factory ParticipationModel.fromMap(String documentId, Map<String, dynamic>? map) {
+  factory ParticipationModel.fromMap(
+    String documentId,
+    Map<String, dynamic>? map,
+  ) {
     if (map == null) {
       return ParticipationModel(
         id: documentId,
@@ -76,14 +82,21 @@ class ParticipationModel {
       return ParticipationModel(
         id: documentId,
         eventId: (map['eventId'] ?? '').toString(),
-        eventTitle: (map['eventTitle'] ?? map['title'] ?? 'Untitled Event').toString(),
+        eventTitle: (map['eventTitle'] ?? map['title'] ?? 'Untitled Event')
+            .toString(),
         userId: (map['userId'] ?? '').toString(),
-        userName: (map['userName'] ?? map['fullname'] ?? map['fullName'] ?? 'User').toString(),
+        userName:
+            (map['userName'] ?? map['fullname'] ?? map['fullName'] ?? 'User')
+                .toString(),
         userEmail: (map['userEmail'] ?? '').toString(),
         status: (map['status'] ?? 'Registered').toString(),
         registeredAt: _parseDate(map['registeredAt']),
-        attendanceMarkedAt: map['attendanceMarkedAt'] != null ? _parseDate(map['attendanceMarkedAt']) : null,
+        attendanceMarkedAt: map['attendanceMarkedAt'] != null
+            ? _parseDate(map['attendanceMarkedAt'])
+            : null,
         feedbackSubmitted: map['feedbackSubmitted'] == true,
+        registrationResponses:
+            map['registrationResponses'] as Map<String, dynamic>?,
         createdAt: _parseDate(map['createdAt'] ?? map['registeredAt']),
         updatedAt: _parseDate(map['updatedAt'] ?? map['registeredAt']),
       );

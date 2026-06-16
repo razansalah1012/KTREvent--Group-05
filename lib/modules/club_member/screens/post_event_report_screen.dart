@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class PostEventReportScreen extends StatefulWidget {
   final String proposalId;
@@ -17,8 +19,8 @@ class PostEventReportScreen extends StatefulWidget {
 }
 
 class _PostEventReportScreenState extends State<PostEventReportScreen> {
-  String? programReportName;
-  String? financialReportName;
+  PlatformFile? programReportFile;
+  PlatformFile? financialReportFile;
   bool isSubmitting = false;
 
   Future<void> pickProgramReport() async {
@@ -29,7 +31,7 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
 
     if (result != null) {
       setState(() {
-        programReportName = result.files.single.name;
+        programReportFile = result.files.single;
       });
     }
   }
@@ -42,13 +44,13 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
 
     if (result != null) {
       setState(() {
-        financialReportName = result.files.single.name;
+        financialReportFile = result.files.single;
       });
     }
   }
 
   Future<void> submitReports() async {
-    if (programReportName == null || financialReportName == null) {
+    if (programReportFile == null || financialReportFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please upload both program and financial reports'),
@@ -62,17 +64,44 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
     });
 
     try {
+      String programUrl = '';
+      String financialUrl = '';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      if (programReportFile!.path != null) {
+        final ref = FirebaseStorage.instance.ref().child(
+          'reports/${timestamp}_${programReportFile!.name}',
+        );
+        final task = await ref.putFile(File(programReportFile!.path!));
+        programUrl = await task.ref.getDownloadURL();
+      }
+
+      if (financialReportFile!.path != null) {
+        final ref = FirebaseStorage.instance.ref().child(
+          'reports/${timestamp}_${financialReportFile!.name}',
+        );
+        final task = await ref.putFile(File(financialReportFile!.path!));
+        financialUrl = await task.ref.getDownloadURL();
+      }
+
       await FirebaseFirestore.instance
           .collection('proposals')
           .doc(widget.proposalId)
           .update({
-        'programReportName': programReportName,
-        'financialReportName': financialReportName,
-        'programReportUrl': '',
-        'financialReportUrl': '',
-        'reportStatus': 'submitted',
-        'submittedReportAt': FieldValue.serverTimestamp(),
-      });
+            'programReportName': programReportFile!.name,
+            'financialReportName': financialReportFile!.name,
+
+            'programReportUrl': programUrl,
+            'financialReportUrl': financialUrl,
+
+            'reportStatus': 'submitted',
+
+            'submittedReportAt': FieldValue.serverTimestamp(),
+
+            'reportExpiresAt': Timestamp.fromDate(
+              DateTime.now().add(const Duration(days: 14)),
+            ),
+          });
 
       if (!mounted) return;
 
@@ -82,9 +111,9 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting reports: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error submitting reports: $e')));
     }
 
     if (mounted) {
@@ -149,7 +178,7 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
 
               _reportUploadCard(
                 title: 'Program Report',
-                subtitle: programReportName ?? 'No file selected',
+                subtitle: programReportFile?.name ?? 'No file selected',
                 icon: Icons.description_outlined,
                 onPressed: pickProgramReport,
               ),
@@ -158,7 +187,7 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
 
               _reportUploadCard(
                 title: 'Financial Report',
-                subtitle: financialReportName ?? 'No file selected',
+                subtitle: financialReportFile?.name ?? 'No file selected',
                 icon: Icons.receipt_long_outlined,
                 onPressed: pickFinancialReport,
               ),
@@ -179,13 +208,13 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
                   child: isSubmitting
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                    'Submit Reports',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          'Submit Reports',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -207,9 +236,7 @@ class _PostEventReportScreenState extends State<PostEventReportScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF3A285A),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFB99CFF).withOpacity(0.5),
-        ),
+        border: Border.all(color: const Color(0xFFB99CFF).withOpacity(0.5)),
       ),
       child: Column(
         children: [
