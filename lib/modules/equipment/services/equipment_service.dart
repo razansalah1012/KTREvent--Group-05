@@ -43,16 +43,7 @@ class EquipmentService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
 
-    final existing = await _firestore
-        .collection('equipment_requests')
-        .where('requesterId', isEqualTo: user.uid)
-        .where('equipmentName', isEqualTo: equipmentName)
-        .where('status', isEqualTo: 'pending')
-        .get();
-
-    if (existing.docs.isNotEmpty) {
-      throw Exception('You already have a pending request for this item.');
-    }
+    // Allow multiple requests, don't throw error.
 
     final userDoc = await _firestore.collection('users').doc(user.uid).get();
     final userData = userDoc.data() ?? {};
@@ -74,7 +65,17 @@ class EquipmentService {
       updatedAt: DateTime.now(),
     );
 
-    await _firestore.collection('equipment_requests').add(request.toMap());
+    final batch = _firestore.batch();
+    
+    final newRequestRef = _firestore.collection('equipment_requests').doc();
+    batch.set(newRequestRef, request.toMap());
+
+    // Decrement available quantity immediately
+    batch.update(_firestore.collection('equipment').doc(equipmentId), {
+      'availableQuantity': FieldValue.increment(-quantity),
+    });
+
+    await batch.commit();
   }
 
   Stream<List<EquipmentRequestModel>> getRequests({
@@ -129,25 +130,7 @@ class EquipmentService {
 
     batch.update(requestRef, updateData);
 
-    if (newStatus.toLowerCase() == 'approved') {
-      final equipSnapshot = await _firestore
-          .collection('equipment')
-          .where('name', isEqualTo: equipmentName)
-          .limit(1)
-          .get();
-
-      if (equipSnapshot.docs.isNotEmpty) {
-        final equipDoc = equipSnapshot.docs.first;
-        final available = equipDoc.data()['availableQuantity'] ?? 0;
-        if (available >= quantity) {
-          batch.update(equipDoc.reference, {
-            'availableQuantity': FieldValue.increment(-quantity),
-          });
-        } else {
-          throw Exception('Not enough equipment available');
-        }
-      }
-    } else if (newStatus.toLowerCase() == 'returned') {
+    if (newStatus.toLowerCase() == 'rejected' || newStatus.toLowerCase() == 'returned') {
       final equipSnapshot = await _firestore
           .collection('equipment')
           .where('name', isEqualTo: equipmentName)

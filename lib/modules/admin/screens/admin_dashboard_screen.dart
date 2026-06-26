@@ -10,6 +10,7 @@ import '../../reports/screens/admin_reports_screen.dart';
 import '../../equipment/screens/approve_equipment_screen.dart';
 import '../../equipment/screens/track_equipment_screen.dart';
 import '../../../core/localization/app_translations.dart';
+import 'analytics_dashboard_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -167,6 +168,21 @@ class AdminDashboardScreen extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const TrackEquipmentScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _adminFeatureCard(
+                    context: context,
+                    title: AppTranslations.get(lang, 'analytics_dashboard'),
+                    subtitle: AppTranslations.get(lang, 'analytics_dashboard_desc'),
+                    icon: Icons.analytics_outlined,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AnalyticsDashboardScreen(),
                         ),
                       );
                     },

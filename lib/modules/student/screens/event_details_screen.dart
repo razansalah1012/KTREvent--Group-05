@@ -7,6 +7,7 @@ import '../../participation/models/participation_model.dart';
 import '../../participation/services/participation_service.dart';
 import 'event_registration_screen.dart';
 import '../../../core/localization/app_translations.dart';
+import '../../../core/services/local_notification_service.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -385,13 +386,74 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           final isRegistered =
               partSnapshot.hasData && partSnapshot.data != null;
 
+          if (isRegistered) {
+            return Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      AppTranslations.get(lang, 'already_registered'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FutureBuilder<bool>(
+                  future: LocalNotificationService().hasReminder(widget.eventId),
+                  builder: (context, reminderSnapshot) {
+                    final hasReminder = reminderSnapshot.data ?? false;
+                    return Container(
+                      height: 56,
+                      width: 56,
+                      decoration: BoxDecoration(
+                        color: hasReminder ? const Color(0xFF6C48FF) : const Color(0xFF2A1E4D),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          hasReminder ? Icons.notifications_active : Icons.notifications_none,
+                          color: Colors.white,
+                        ),
+                        onPressed: () async {
+                          if (hasReminder) {
+                            await LocalNotificationService().cancelEventReminder(widget.eventId);
+                          } else {
+                            final eventDoc = await FirebaseFirestore.instance.collection('events').doc(widget.eventId).get();
+                            if (eventDoc.exists) {
+                              final event = EventModel.fromFirestore(eventDoc);
+                              await LocalNotificationService().scheduleEventReminder(
+                                eventId: event.id!,
+                                title: event.title,
+                                eventDate: event.date,
+                                eventTime: event.startTime ?? '',
+                              );
+                            }
+                          }
+                          setState(() {});
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          }
+
           return SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: isRegistered
-                  ? null
-                  : () async {
+              onPressed: () async {
                       final eventDoc = await FirebaseFirestore.instance
                           .collection('events')
                           .doc(widget.eventId)
@@ -408,9 +470,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isRegistered
-                    ? Colors.green.shade700
-                    : const Color(0xFF6C48FF),
+                backgroundColor: const Color(0xFF6C48FF),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -418,9 +478,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 elevation: 0,
               ),
               child: Text(
-                isRegistered
-                    ? AppTranslations.get(lang, 'already_registered')
-                    : AppTranslations.get(lang, 'register_now'),
+                AppTranslations.get(lang, 'register_now'),
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

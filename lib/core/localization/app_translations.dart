@@ -50,6 +50,14 @@ class AppTranslations {
       'equipment_usage_desc':
           'Track approved equipment usage and request history.',
 
+      'analytics_dashboard': 'Analytics Dashboard',
+      'analytics_dashboard_desc':
+          'View statistics for events, equipment, and users.',
+      'event_stats': 'Event Statistics',
+      'equipment_stats': 'Equipment Statistics',
+      'user_stats': 'User Engagement',
+      'proposal_stats': 'Proposal Statistics',
+
       'hello': 'Hello',
       'explore_events': 'Explore Events',
       'discover_events': 'Discover and join exciting events around you.',
@@ -399,6 +407,14 @@ class AppTranslations {
       'equipment_usage': 'Penggunaan Peralatan',
       'equipment_usage_desc':
           'Jejaki sejarah penggunaan peralatan yang diluluskan.',
+
+      'analytics_dashboard': 'Papan Pemuka Analitik',
+      'analytics_dashboard_desc':
+          'Lihat statistik untuk acara, peralatan, dan pengguna.',
+      'event_stats': 'Statistik Acara',
+      'equipment_stats': 'Statistik Peralatan',
+      'user_stats': 'Penglibatan Pengguna',
+      'proposal_stats': 'Statistik Kertas Kerja',
 
       'hello': 'Helo',
       'explore_events': 'Teroka Acara',

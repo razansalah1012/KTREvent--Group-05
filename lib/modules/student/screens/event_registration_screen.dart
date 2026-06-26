@@ -7,6 +7,7 @@ import 'package:razakevent/modules/events/models/event_model.dart';
 import 'package:razakevent/modules/participation/services/participation_service.dart';
 import 'package:razakevent/modules/student/screens/payment_screen.dart';
 import '../../../../core/localization/app_translations.dart';
+import '../../../../core/services/local_notification_service.dart';
 
 class EventRegistrationScreen extends StatefulWidget {
   final EventModel event;
@@ -108,6 +109,13 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
         widget.event.id!,
         widget.event.title,
         registrationResponses: fullResponses,
+      );
+
+      await LocalNotificationService().scheduleEventReminder(
+        eventId: widget.event.id!,
+        title: widget.event.title,
+        eventDate: widget.event.date,
+        eventTime: widget.event.startTime ?? '',
       );
 
       if (mounted) {

@@ -27,12 +27,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _pages = const [
-      ExploreEventsScreen(),
-      BookedEventsScreen(),
-      RequestEquipmentScreen(),
-      NotificationsScreen(),
-      StudentProfileScreen(),
+    _pages = [
+      const ExploreEventsScreen(),
+      const BookedEventsScreen(),
+      const RequestEquipmentScreen(),
+      const NotificationsScreen(),
+      const StudentProfileScreen(),
     ];
   }
 
