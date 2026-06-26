@@ -16,8 +16,6 @@ class ExploreEventsScreen extends StatefulWidget {
 }
 
 class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
-  String selectedCategory = 'All';
-
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedStatus = 'All';
@@ -30,21 +28,16 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
 
   String _formatDate(dynamic rawDate) {
     if (rawDate == null) return 'Date TBD';
+    DateTime? date;
     if (rawDate is Timestamp) {
-      final date = rawDate.toDate();
+      date = rawDate.toDate();
+    } else if (rawDate is DateTime) {
+      date = rawDate;
+    }
+    if (date != null) {
       final months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     }
@@ -160,15 +153,6 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
         final data = snapshot.data?.data() ?? {};
         final lang = data['language'] ?? 'en';
 
-        final List<String> categories = [
-          'All',
-          'Competition',
-          'Workshop',
-          'Seminar',
-          'Sports',
-          'Bazaar',
-        ];
-
         return Scaffold(
           backgroundColor: AppColors.background,
           body: SafeArea(
@@ -197,7 +181,7 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                             TextSpan(
                               text: 'Event',
                               style: GoogleFonts.poppins(
-                                color: Colors.white,
+                                color: Colors.redAccent,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -325,59 +309,6 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                   ),
                 ),
 
-                SizedBox(
-                  height: 40,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(left: 20),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = selectedCategory == category;
-
-                      String displayCategory = category;
-                      if (category == 'All')
-                        displayCategory = AppTranslations.get(lang, 'all');
-                      if (category == 'Competition')
-                        displayCategory = AppTranslations.get(
-                          lang,
-                          'competition',
-                        );
-                      if (category == 'Workshop')
-                        displayCategory = AppTranslations.get(lang, 'workshop');
-                      if (category == 'Seminar')
-                        displayCategory = AppTranslations.get(lang, 'seminar');
-                      if (category == 'Sports')
-                        displayCategory = AppTranslations.get(lang, 'sports');
-                      if (category == 'Bazaar')
-                        displayCategory = AppTranslations.get(lang, 'bazaar');
-
-                      return GestureDetector(
-                        onTap: () =>
-                            setState(() => selectedCategory = category),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.card,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            displayCategory,
-                            style: GoogleFonts.poppins(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
 
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 25, 20, 15),
@@ -432,11 +363,6 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                             return EventModel.fromFirestore(doc);
                           })
                           .where((event) {
-                            if (selectedCategory != 'All' &&
-                                event.category != selectedCategory) {
-                              return false;
-                            }
-
                             String status = 'OPEN';
                             final registeredCount = event.registeredCount;
                             if (registeredCount >= event.capacity)

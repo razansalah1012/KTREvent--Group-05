@@ -8,6 +8,8 @@ import '../../participation/services/participation_service.dart';
 import 'event_registration_screen.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/services/local_notification_service.dart';
+import 'apply_as_crew_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -56,31 +58,39 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       builder: (context, userSnapshot) {
         final lang = userSnapshot.data?.data()?['language'] ?? 'en';
 
-        return Scaffold(
-          backgroundColor: const Color(0xFF0B0820),
-          body: StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('events')
-                .doc(widget.eventId)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData)
-                return const Center(child: CircularProgressIndicator());
-              if (!snapshot.data!.exists)
-                return Center(
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Scaffold(
+                backgroundColor: Color(0xFF0B0820),
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (!snapshot.data!.exists) {
+              return Scaffold(
+                backgroundColor: const Color(0xFF0B0820),
+                body: Center(
                   child: Text(
                     AppTranslations.get(lang, 'event_not_found'),
                     style: const TextStyle(color: Colors.white),
                   ),
-                );
+                ),
+              );
+            }
 
-              final event = EventModel.fromFirestore(snapshot.data!);
-              final seatsLeft = event.capacity - event.registeredCount;
-              final deadline = event.registrationDeadline != null
-                  ? '${event.registrationDeadline!.day}/${event.registrationDeadline!.month}/${event.registrationDeadline!.year}'
-                  : AppTranslations.get(lang, 'not_applicable');
+            final event = EventModel.fromFirestore(snapshot.data!);
+            final seatsLeft = event.capacity - event.registeredCount;
+            final deadline = event.registrationDeadline != null
+                ? '${event.registrationDeadline!.day}/${event.registrationDeadline!.month}/${event.registrationDeadline!.year}'
+                : AppTranslations.get(lang, 'not_applicable');
 
-              return CustomScrollView(
+            return Scaffold(
+              backgroundColor: const Color(0xFF0B0820),
+              body: CustomScrollView(
                 slivers: [
                   _buildSliverAppBar(event, lang),
                   SliverToBoxAdapter(
@@ -100,13 +110,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           const SizedBox(height: 24),
                           _buildInfoRow(
                             Icons.calendar_today_rounded,
-                            widget.date,
+                            '${event.date.day}/${event.date.month}/${event.date.year}',
                             event.startTime ?? '9:00 AM - 6:00 PM',
                           ),
                           const SizedBox(height: 16),
                           _buildInfoRow(
                             Icons.location_on_rounded,
-                            widget.location,
+                            event.location,
                             '',
                           ),
                           const SizedBox(height: 16),
@@ -180,10 +190,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     ),
                   ),
                 ],
-              );
-            },
-          ),
-          bottomSheet: _buildBottomBar(lang),
+              ),
+              bottomSheet: _buildBottomBar(lang, event),
+            );
+          },
         );
       },
     );
@@ -201,7 +211,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.share_outlined, color: Colors.white),
-          onPressed: () {},
+          onPressed: () {
+            Share.share(
+              'Check out ${event.title} on ${event.date.day}/${event.date.month}/${event.date.year} at ${event.location}!\n\nJoin me by registering on the RazakEvent app.',
+            );
+          },
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -373,7 +387,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildBottomBar(String lang) {
+  Widget _buildBottomBar(String lang, EventModel event) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: const BoxDecoration(
@@ -449,11 +463,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             );
           }
 
-          return SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () async {
+          return Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () async {
                       final eventDoc = await FirebaseFirestore.instance
                           .collection('events')
                           .doc(widget.eventId)
@@ -469,23 +485,65 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         );
                       }
                     },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C48FF),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C48FF),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      AppTranslations.get(lang, 'register_now'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                elevation: 0,
               ),
-              child: Text(
-                AppTranslations.get(lang, 'register_now'),
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              if (event.crewSlots > 0) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ApplyAsCrewScreen(
+                              eventId: widget.eventId,
+                              eventTitle: event.title,
+                              eventOrganizerId: event.organizerId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2A1E4D),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: const BorderSide(color: Color(0xFFB794FF)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Apply as Crew',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              ],
+            ],
           );
         },
       ),

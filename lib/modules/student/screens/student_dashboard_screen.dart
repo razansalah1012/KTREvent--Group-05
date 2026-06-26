@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:razakevent/modules/student/screens/explore_events_screen.dart';
 import 'package:razakevent/modules/student/screens/booked_events_screen.dart';
 import 'package:razakevent/modules/student/screens/student_profile_screen.dart';
-import 'package:razakevent/modules/student/screens/notifications_screen.dart';
 import '../../equipment/screens/request_equipment_screen.dart';
 import 'package:razakevent/core/constants/app_colors.dart';
 
@@ -31,7 +30,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       const ExploreEventsScreen(),
       const BookedEventsScreen(),
       const RequestEquipmentScreen(),
-      const NotificationsScreen(),
       const StudentProfileScreen(),
     ];
   }
@@ -89,8 +87,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10),
             items: [
               BottomNavigationBarItem(
-                icon: const Icon(Icons.explore_outlined),
-                activeIcon: const Icon(Icons.explore),
+                icon: const Icon(Icons.confirmation_num_outlined),
+                activeIcon: const Icon(Icons.confirmation_num),
                 label: AppTranslations.get(lang, 'explore'),
               ),
               BottomNavigationBarItem(
@@ -102,29 +100,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 icon: const Icon(Icons.inventory_2_outlined),
                 activeIcon: const Icon(Icons.inventory_2),
                 label: AppTranslations.get(lang, 'equipment'),
-              ),
-              BottomNavigationBarItem(
-                icon: Stack(
-                  children: [
-                    const Icon(Icons.notifications_none_outlined),
-                    Positioned(
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: const BoxDecoration(
-                          color: AppColors.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 8,
-                          minHeight: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                activeIcon: const Icon(Icons.notifications),
-                label: AppTranslations.get(lang, 'alerts'),
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline),

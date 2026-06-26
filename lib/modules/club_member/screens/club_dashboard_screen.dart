@@ -5,7 +5,6 @@ import 'package:razakevent/core/constants/app_colors.dart';
 import 'club_proposals_screen.dart';
 import 'club_events_screen.dart';
 import 'club_equipment_screen.dart';
-import '../../student/screens/notifications_screen.dart';
 import 'club_profile_screen.dart';
 import '../../community/screens/community_list_screen.dart';
 
@@ -33,7 +32,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
       ClubEventsScreen(),
       CommunityListScreen(),
       ClubEquipmentScreen(),
-      NotificationsScreen(),
       ClubProfileScreen(),
     ];
   }
@@ -109,29 +107,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                 icon: const Icon(Icons.inventory_2_outlined),
                 activeIcon: const Icon(Icons.inventory_2),
                 label: AppTranslations.get(lang, 'equipment'),
-              ),
-              BottomNavigationBarItem(
-                icon: Stack(
-                  children: [
-                    const Icon(Icons.notifications_none_outlined),
-                    Positioned(
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: const BoxDecoration(
-                          color: AppColors.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 8,
-                          minHeight: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                activeIcon: const Icon(Icons.notifications),
-                label: AppTranslations.get(lang, 'alerts'),
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline),
