@@ -326,7 +326,7 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('events')
-                        .orderBy('createdAt', descending: true)
+                        .orderBy('date', descending: false)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -359,29 +359,24 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                       }
 
                       final events = snapshot.data!.docs
-                          .map((doc) {
-                            return EventModel.fromFirestore(doc);
-                          })
+                          .map((doc) => EventModel.fromFirestore(doc))
                           .where((event) {
-                            String status = 'OPEN';
-                            final registeredCount = event.registeredCount;
-                            if (registeredCount >= event.capacity)
-                              status = 'FULL';
-                            if (_selectedStatus != 'All' &&
-                                status != _selectedStatus) {
-                              return false;
+                            final status = event.getStatus();
+                            
+                            if (_selectedStatus != 'All') {
+                              if (_selectedStatus == 'OPEN') {
+                                if (status != 'OPEN' && status != 'CLOSING SOON') return false;
+                              } else if (_selectedStatus == 'CLOSED') {
+                                if (status != 'CLOSED' && status != 'FULL') return false;
+                              } else if (_selectedStatus != status) {
+                                return false;
+                              }
                             }
 
                             if (_searchQuery.isNotEmpty) {
-                              return event.title.toLowerCase().contains(
-                                    _searchQuery,
-                                  ) ||
-                                  event.location.toLowerCase().contains(
-                                    _searchQuery,
-                                  ) ||
-                                  event.description.toLowerCase().contains(
-                                    _searchQuery,
-                                  );
+                              return event.title.toLowerCase().contains(_searchQuery) ||
+                                  event.location.toLowerCase().contains(_searchQuery) ||
+                                  event.description.toLowerCase().contains(_searchQuery);
                             }
 
                             return true;
@@ -411,13 +406,7 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
                           itemCount: events.length,
                           itemBuilder: (context, index) {
                             final event = events[index];
-                            String status = 'OPEN';
-                            if (event.registeredCount >= event.capacity) {
-                              status = 'FULL';
-                            } else if (event.capacity - event.registeredCount <=
-                                5) {
-                              status = 'CLOSING SOON';
-                            }
+                            final status = event.getStatus();
 
                             return EventTicketCard(
                               title: event.title,

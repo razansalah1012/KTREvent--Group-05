@@ -7,6 +7,7 @@ import 'club_events_screen.dart';
 import 'club_equipment_screen.dart';
 import 'club_profile_screen.dart';
 import '../../community/screens/community_list_screen.dart';
+import '../../student/screens/notifications_screen.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,6 +33,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
       ClubEventsScreen(),
       CommunityListScreen(),
       ClubEquipmentScreen(),
+      NotificationsScreen(),
       ClubProfileScreen(),
     ];
   }
@@ -83,10 +85,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
             showUnselectedLabels: true,
             type: BottomNavigationBarType.fixed,
             selectedLabelStyle: GoogleFonts.poppins(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w500,
             ),
-            unselectedLabelStyle: GoogleFonts.poppins(fontSize: 9),
+            unselectedLabelStyle: GoogleFonts.poppins(fontSize: 8),
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.description_outlined),
@@ -107,6 +109,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                 icon: const Icon(Icons.inventory_2_outlined),
                 activeIcon: const Icon(Icons.inventory_2),
                 label: AppTranslations.get(lang, 'equipment'),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.notifications_outlined),
+                activeIcon: const Icon(Icons.notifications),
+                label: AppTranslations.get(lang, 'alerts'),
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline),

@@ -190,7 +190,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     _buildFilterTab("All"),
                     _buildFilterTab("Requests"),
                     _buildFilterTab("Announcements"),
-                    _buildFilterTab("Chats"),
+                    if (_userRole == 'club_member') _buildFilterTab("Chats"),
                     _buildFilterTab("System"),
                   ],
                 ),

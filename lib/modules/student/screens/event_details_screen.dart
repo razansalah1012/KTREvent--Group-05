@@ -86,7 +86,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             final seatsLeft = event.capacity - event.registeredCount;
             final deadline = event.registrationDeadline != null
                 ? '${event.registrationDeadline!.day}/${event.registrationDeadline!.month}/${event.registrationDeadline!.year}'
-                : AppTranslations.get(lang, 'not_applicable');
+                : null;
 
             return Scaffold(
               backgroundColor: const Color(0xFF0B0820),
@@ -122,7 +122,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           const SizedBox(height: 16),
                           _buildInfoRow(
                             Icons.person_outline_rounded,
-                            event.organizerName ?? 'Computer Society UTM',
+                            event.organizerName ?? 'Organizer',
                             AppTranslations.get(lang, 'organizer'),
                           ),
 
@@ -148,39 +148,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 32),
-                          Text(
-                            AppTranslations.get(lang, 'what_to_expect'),
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
                           if (event.whatToExpect != null &&
-                              event.whatToExpect!.isNotEmpty)
+                              event.whatToExpect!.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            Text(
+                              AppTranslations.get(lang, 'what_to_expect'),
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
                             ...event.whatToExpect!.map(
                               (item) => _buildExpectationItem(item),
-                            )
-                          else ...[
-                            _buildExpectationItem(
-                              AppTranslations.get(
-                                lang,
-                                'competitive_programming',
-                              ),
-                            ),
-                            _buildExpectationItem(
-                              AppTranslations.get(lang, 'problem_solving'),
-                            ),
-                            _buildExpectationItem(
-                              AppTranslations.get(
-                                lang,
-                                'networking_opportunities',
-                              ),
-                            ),
-                            _buildExpectationItem(
-                              AppTranslations.get(lang, 'certificates'),
                             ),
                           ],
 
@@ -200,6 +181,24 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildSliverAppBar(EventModel event, String lang) {
+    final status = event.getStatus();
+    Color badgeColor = Colors.greenAccent;
+    String displayStatus = AppTranslations.get(lang, 'open');
+
+    if (status == 'FULL') {
+      badgeColor = Colors.redAccent;
+      displayStatus = AppTranslations.get(lang, 'full');
+    } else if (status == 'CLOSING SOON') {
+      badgeColor = Colors.orangeAccent;
+      displayStatus = AppTranslations.get(lang, 'closing_soon');
+    } else if (status == 'CLOSED') {
+      badgeColor = Colors.white38;
+      displayStatus = AppTranslations.get(lang, 'closed');
+    } else if (status == 'ONGOING') {
+      badgeColor = Colors.blueAccent;
+      displayStatus = AppTranslations.get(lang, 'ongoing');
+    }
+
     return SliverAppBar(
       expandedHeight: 250,
       backgroundColor: const Color(0xFF0B0820),
@@ -254,16 +253,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.greenAccent.withOpacity(0.2),
+                  color: badgeColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.greenAccent.withOpacity(0.5),
+                    color: badgeColor.withOpacity(0.5),
                   ),
                 ),
                 child: Text(
-                  AppTranslations.get(lang, 'open'),
+                  displayStatus,
                   style: GoogleFonts.poppins(
-                    color: Colors.greenAccent,
+                    color: badgeColor,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -318,7 +317,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Widget _buildStatsSection(
     EventModel event,
     int seatsLeft,
-    String deadline,
+    String? deadline,
     String lang,
   ) {
     return Container(
@@ -328,16 +327,30 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _statItem(AppTranslations.get(lang, 'fee'), 'RM${event.fee.toInt()}'),
-          _statDivider(),
-          _statItem(
-            AppTranslations.get(lang, 'seats_left'),
-            '$seatsLeft/${event.capacity}',
+          Expanded(
+            child: _statItem(
+              AppTranslations.get(lang, 'fee'),
+              event.fee > 0 ? 'RM${event.fee.toInt()}' : 'FREE',
+            ),
           ),
           _statDivider(),
-          _statItem(AppTranslations.get(lang, 'deadline'), deadline),
+          Expanded(
+            child: _statItem(
+              AppTranslations.get(lang, 'seats_left'),
+              '$seatsLeft/${event.capacity}',
+            ),
+          ),
+          if (deadline != null) ...[
+            _statDivider(),
+            Expanded(
+              child: _statItem(
+                AppTranslations.get(lang, 'deadline'),
+                deadline,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -353,6 +366,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         const SizedBox(height: 4),
         Text(
           value,
+          textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             color: const Color(0xFFB794FF),
             fontSize: 14,
@@ -378,9 +392,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             size: 20,
           ),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: GoogleFonts.quicksand(color: Colors.white70, fontSize: 15),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.quicksand(color: Colors.white70, fontSize: 15),
+            ),
           ),
         ],
       ),
@@ -388,6 +404,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildBottomBar(String lang, EventModel event) {
+    final status = event.getStatus();
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: const BoxDecoration(
@@ -463,13 +481,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             );
           }
 
+          if (status == 'CLOSED') {
+            return Container(
+              height: 56,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                AppTranslations.get(lang, 'closed').toUpperCase(),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white38,
+                ),
+              ),
+            );
+          }
+
           return Row(
             children: [
               Expanded(
                 child: SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () async {
+                    onPressed: status == 'FULL' ? null : () async {
                       final eventDoc = await FirebaseFirestore.instance
                           .collection('events')
                           .doc(widget.eventId)
@@ -488,23 +526,26 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C48FF),
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.white10,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
                     ),
                     child: Text(
-                      AppTranslations.get(lang, 'register_now'),
+                      status == 'FULL' 
+                        ? AppTranslations.get(lang, 'full').toUpperCase()
+                        : AppTranslations.get(lang, 'register_now'),
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: status == 'FULL' ? Colors.white38 : Colors.white,
                       ),
                     ),
                   ),
                 ),
               ),
-              if (event.crewSlots > 0) ...[
+              if (event.crewSlots > 0 && status != 'CLOSED') ...[
                 const SizedBox(width: 12),
                 Expanded(
                   child: SizedBox(

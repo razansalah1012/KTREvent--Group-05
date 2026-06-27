@@ -27,6 +27,8 @@ class EventTicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isClosed = status.toUpperCase() == 'CLOSED' || status.toUpperCase() == 'FULL';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
@@ -133,7 +135,7 @@ class EventTicketCard extends StatelessWidget {
                       horizontal: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: isClosed ? Colors.white10 : AppColors.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -141,18 +143,16 @@ class EventTicketCard extends StatelessWidget {
                       children: [
                         const SizedBox(width: 20),
                         Text(
-                          status.toUpperCase() == 'FULL'
-                              ? AppTranslations.get(lang, 'join_waiting_list')
-                              : AppTranslations.get(lang, 'view_details'),
+                          AppTranslations.get(lang, 'view_details'),
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isClosed ? Colors.white38 : Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward_ios,
-                          color: Colors.white,
+                          color: isClosed ? Colors.white38 : Colors.white,
                           size: 14,
                         ),
                       ],
@@ -179,20 +179,29 @@ class EventTicketCard extends StatelessWidget {
   Widget _buildStatusBadge(String status, String lang) {
     Color color = Colors.greenAccent;
     String displayStatus = AppTranslations.get(lang, 'open');
-    if (status.toUpperCase() == 'FULL') {
+
+    final upperStatus = status.toUpperCase();
+
+    if (upperStatus == 'FULL') {
       color = Colors.redAccent;
       displayStatus = AppTranslations.get(lang, 'full');
-    }
-    if (status.toUpperCase() == 'CLOSING SOON') {
+    } else if (upperStatus == 'CLOSING SOON') {
       color = Colors.orangeAccent;
       displayStatus = AppTranslations.get(lang, 'closing_soon');
+    } else if (upperStatus == 'CLOSED') {
+      color = Colors.white38;
+      displayStatus = AppTranslations.get(lang, 'closed');
+    } else if (upperStatus == 'ONGOING') {
+      color = Colors.blueAccent;
+      displayStatus = AppTranslations.get(lang, 'ongoing');
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Text(
         displayStatus,

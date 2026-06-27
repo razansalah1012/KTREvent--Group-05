@@ -49,6 +49,34 @@ class EventModel {
     this.paperworkUrl,
   });
 
+  String getStatus() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final eventDate = DateTime(date.year, date.month, date.day);
+
+    if (eventDate.isAtSameMomentAs(today)) {
+      return 'ONGOING';
+    }
+
+    if (eventDate.isBefore(today)) {
+      return 'CLOSED';
+    }
+
+    if (registrationDeadline != null && registrationDeadline!.isBefore(now)) {
+      return 'CLOSED';
+    }
+
+    if (registeredCount >= capacity) {
+      return 'FULL';
+    }
+
+    if (capacity - registeredCount <= 5) {
+      return 'CLOSING SOON';
+    }
+
+    return 'OPEN';
+  }
+
   Map<String, dynamic> toCreateMap() {
     return {
       'title': title,

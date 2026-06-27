@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:razakevent/modules/student/screens/explore_events_screen.dart';
 import 'package:razakevent/modules/student/screens/booked_events_screen.dart';
 import 'package:razakevent/modules/student/screens/student_profile_screen.dart';
+import 'package:razakevent/modules/student/screens/notifications_screen.dart';
 import '../../equipment/screens/request_equipment_screen.dart';
 import 'package:razakevent/core/constants/app_colors.dart';
 
@@ -30,6 +31,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       const ExploreEventsScreen(),
       const BookedEventsScreen(),
       const RequestEquipmentScreen(),
+      const NotificationsScreen(),
       const StudentProfileScreen(),
     ];
   }
@@ -100,6 +102,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 icon: const Icon(Icons.inventory_2_outlined),
                 activeIcon: const Icon(Icons.inventory_2),
                 label: AppTranslations.get(lang, 'equipment'),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.notifications_outlined),
+                activeIcon: const Icon(Icons.notifications),
+                label: AppTranslations.get(lang, 'alerts'),
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline),
